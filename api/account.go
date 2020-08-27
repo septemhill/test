@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 
@@ -39,6 +40,26 @@ func CreateAccount(c *gin.Context) {
 }
 
 func GetAccountInfo(c *gin.Context) {
+	username := c.Param("user")
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": errors.New("unknown user"),
+		})
+		return
+	}
+
+	var acc module.Account
+	acc.Username = username
+
+	db := PostgresDB(c)
+	if err := module.GetAccountInfo(c, db, &acc); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, acc)
 }
 
 func UpdateAccountInfo(c *gin.Context) {

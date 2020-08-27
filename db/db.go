@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 
+	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	//_ "github.com/lib/pq"
 )
 
 type DB struct {
@@ -14,7 +15,7 @@ type DB struct {
 
 func OpenDB() *DB {
 	connInfo := `user=septemlee dbname=septemlee sslmode=disable`
-	db := sqlx.MustConnect("postgres", connInfo)
+	db := sqlx.MustConnect("pgx", connInfo)
 	return &DB{DB: db}
 }
 

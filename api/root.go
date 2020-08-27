@@ -48,7 +48,7 @@ func (h *rootHandler) Login(c *gin.Context) {
 		"password": m["password"],
 	}).Debugln("User Info")
 
-	row := rdb.QueryRowxContext(c, `SELECT COUNT(*) FROM account_private WHERE username = $1 AND password = $2`, m["username"], m["password"])
+	row := rdb.QueryRowxContext(c, `SELECT COUNT(*) FROM accounts_private WHERE username = $1 AND password = $2`, m["username"], m["password"])
 	n := 0
 	if err := row.Scan(&n); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
