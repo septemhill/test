@@ -13,7 +13,7 @@ import (
 
 func validateSessionToken(c *gin.Context) {
 	token := c.GetHeader(HEADER_SESSION_TOKEN)
-	rdb := c.MustGet(module.RESOURCE_MDB).(*redis.Client)
+	rdb := RedisDB(c)
 	if _, err := rdb.Get(token).Result(); err == redis.Nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"errMessage": "Invalid session token"})
 		return

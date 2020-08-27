@@ -9,8 +9,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis"
-	"github.com/septemhill/test/db"
 	"github.com/septemhill/test/module"
 	"github.com/sirupsen/logrus"
 )
@@ -41,9 +39,9 @@ func (h *rootHandler) Login(c *gin.Context) {
 		return
 	}
 
-	logger := c.MustGet(module.RESOURCE_LOG).(*logrus.Logger)
-	rdb := c.MustGet(module.RESOURCE_RDB).(*db.DB)
-	mdb := c.MustGet(module.RESOURCE_MDB).(*redis.Client)
+	logger := Logger(c)
+	rdb := PostgresDB(c)
+	mdb := RedisDB(c)
 
 	logger.WithFields(logrus.Fields{
 		"username": m["username"],
@@ -76,7 +74,7 @@ func (h *rootHandler) Login(c *gin.Context) {
 
 func (h *rootHandler) Logout(c *gin.Context) {
 	token := c.GetHeader(HEADER_SESSION_TOKEN)
-	rdb := c.MustGet(module.RESOURCE_MDB).(*redis.Client)
+	rdb := RedisDB(c)
 	rdb.Del(token)
 }
 

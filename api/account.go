@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/septemhill/test/db"
 	"github.com/septemhill/test/module"
 )
 
@@ -28,7 +27,7 @@ func CreateAccount(c *gin.Context) {
 		return
 	}
 
-	db := c.MustGet(module.RESOURCE_RDB).(*db.DB)
+	db := PostgresDB(c)
 	if err := module.CreateAccount(c, db, acc); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"errMessage": err.Error(),
@@ -60,7 +59,7 @@ func UpdateAccountInfo(c *gin.Context) {
 		return
 	}
 
-	db := c.MustGet(module.RESOURCE_RDB).(*db.DB)
+	db := PostgresDB(c)
 	if err := module.UpdateAccountInfo(c, db, acc); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"errMessage": err.Error(),
@@ -91,7 +90,7 @@ func DeleteAccount(c *gin.Context) {
 		return
 	}
 
-	db := c.MustGet(module.RESOURCE_RDB).(*db.DB)
+	db := PostgresDB(c)
 	if err := module.DeleteAccount(c, db, acc); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"errMessage": err.Error(),
