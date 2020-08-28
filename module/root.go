@@ -7,13 +7,14 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
 	"github.com/septemhill/test/db"
+	"gopkg.in/guregu/null.v4"
 )
 
 type SignupInfo struct {
-	Username string
-	Password string
-	Email    string
-	Phone    string
+	Username string      `db:"username" json:"username"`
+	Password string      `db:"password" json:"password"`
+	Email    string      `db:"email" json:"email"`
+	Phone    null.String `db:"phone" json:"phone"`
 }
 
 func Signup(ctx context.Context, db *db.DB, redis *redis.Client, info SignupInfo) (string, error) {
