@@ -51,7 +51,7 @@ func SetLogger() gin.HandlerFunc {
 
 func SetPostgreSqlDB() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set(module.RESOURCE_RDB, db.OpenDB())
+		c.Set(module.RESOURCE_RDB, db.Connect())
 		c.Next()
 	}
 }

@@ -1,12 +1,7 @@
 package api
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/septemhill/test/module"
@@ -16,59 +11,31 @@ import (
 type rootHandler struct {
 }
 
-func sessionTokenGenerate() string {
-	b := make([]byte, 32)
-	rand.Read(b)
-	return hex.EncodeToString(b)
-}
-
 func (h *rootHandler) Login(c *gin.Context) {
-	b, err := ioutil.ReadAll(c.Request.Body)
+	var acc module.Account
+
+	if err := c.BindJSON(&acc); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	db := PostgresDB(c)
+	redis := RedisDB(c)
+
+	code, err := module.Login(c, db, redis, acc.Username, acc.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errorMessage": err.Error(),
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
 		})
 		return
 	}
-
-	m := make(map[string]string)
-	if err := json.Unmarshal(b, &m); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errorMessage": err.Error(),
-		})
-		return
-	}
-
-	logger := Logger(c)
-	rdb := PostgresDB(c)
-	mdb := RedisDB(c)
-
-	logger.WithFields(logrus.Fields{
-		"username": m["username"],
-		"password": m["password"],
-	}).Debugln("User Info")
-
-	row := rdb.QueryRowxContext(c, `SELECT COUNT(*) FROM accounts_private WHERE username = $1 AND password = $2`, m["username"], m["password"])
-	n := 0
-	if err := row.Scan(&n); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errorMessage": err.Error(),
-		})
-		return
-	}
-
-	if n != 1 {
-		c.JSON(http.StatusOK, gin.H{
-			"errorMessage": "Invalid username or password",
-		})
-		return
-	}
-
-	token := sessionTokenGenerate()
-	mdb.Set(token, "", time.Hour*1)
 
 	c.JSON(http.StatusOK, gin.H{
-		"session_token": token,
+		"message": gin.H{
+			"code": code,
+		},
 	})
 }
 

@@ -13,8 +13,8 @@ type DB struct {
 	*sqlx.DB
 }
 
-func OpenDB() *DB {
-	connInfo := `user=septemlee dbname=septemlee sslmode=disable`
+func Connect() *DB {
+	connInfo := `user=septemlee dbname=postgres sslmode=disable`
 	db := sqlx.MustConnect("pgx", connInfo)
 	return &DB{DB: db}
 }

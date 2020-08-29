@@ -2,6 +2,7 @@ package module
 
 import (
 	"context"
+	"encoding/hex"
 	"math/rand"
 	"time"
 
@@ -19,6 +20,12 @@ func generateLink() string {
 	rand.Seed(time.Now().UnixNano())
 	rand.Shuffle(len(b), func(i, j int) { b[i], b[j] = b[j], b[i] })
 	return string([]byte{b[0], b[1], b[2], b[3], b[4], b[5]})
+}
+
+func sessionTokenGenerate() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return hex.EncodeToString(b)
 }
 
 func txAction(ctx context.Context, db *db.DB, txFunc func(*sqlx.Tx) error) (err error) {

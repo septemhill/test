@@ -1,42 +1,22 @@
 package api
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/septemhill/test/db"
 	"github.com/septemhill/test/module"
 )
 
 func CreateAccount(c *gin.Context) {
-	b, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-	defer c.Request.Body.Close()
+	acc := new(module.Account)
 
-	var acc module.Account
-	if err := json.Unmarshal(b, &acc); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-
-	db := PostgresDB(c)
-	if err := module.CreateAccount(c, db, acc); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "create successful"})
+	requestHandler(c, acc, func(ctx context.Context, db *db.DB, v interface{}) error {
+		acc := v.(*module.Account)
+		return module.CreateAccount(c, db, *acc)
+	})
 }
 
 func GetAccountInfo(c *gin.Context) {
@@ -63,63 +43,21 @@ func GetAccountInfo(c *gin.Context) {
 }
 
 func UpdateAccountInfo(c *gin.Context) {
-	b, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-	defer c.Request.Body.Close()
+	acc := new(module.Account)
 
-	var acc module.Account
-	if err := json.Unmarshal(b, &acc); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-
-	db := PostgresDB(c)
-	if err := module.UpdateAccountInfo(c, db, acc); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "update successful",
+	requestHandler(c, acc, func(ctx context.Context, db *db.DB, v interface{}) error {
+		acc := v.(*module.Account)
+		return module.UpdateAccountInfo(c, db, *acc)
 	})
 }
 
 func DeleteAccount(c *gin.Context) {
-	b, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-	defer c.Request.Body.Close()
+	acc := new(module.Account)
 
-	var acc module.Account
-	if err := json.Unmarshal(b, &acc); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-
-	db := PostgresDB(c)
-	if err := module.DeleteAccount(c, db, acc); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "delete successful"})
+	requestHandler(c, acc, func(ctx context.Context, db *db.DB, v interface{}) error {
+		acc := v.(*module.Account)
+		return module.DeleteAccount(c, db, *acc)
+	})
 }
 
 func AccountService(router *gin.Engine) *gin.Engine {
@@ -129,7 +67,7 @@ func AccountService(router *gin.Engine) *gin.Engine {
 	account.PUT("/", CreateAccount)
 	account.POST("/", UpdateAccountInfo)
 	account.GET("/:user", GetAccountInfo)
-	account.DELETE("/delete", DeleteAccount)
+	account.DELETE("/", DeleteAccount)
 
 	return router
 }

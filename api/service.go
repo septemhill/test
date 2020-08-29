@@ -15,5 +15,5 @@ func LoadRootService(r *gin.Engine) {
 }
 
 func LoadRootAndAccountService(r *gin.Engine) {
-	LoadServices(r, RootService, AccountService)
+	LoadServices(r, RootService, AccountService, ArticleService, BlogService)
 }

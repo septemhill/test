@@ -18,21 +18,16 @@ type Account struct {
 }
 
 func CreateAccount(ctx context.Context, db *db.DB, acc Account) (err error) {
-	expr := `INSER INTO account VALUES(DEFAULT, $1, $2, $3, $4)`
+	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3)`
+	accpriExpr := `INSERT INTO accounts_private VALUES (DEFAULT, $1, $2)`
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
-		res, err := tx.ExecContext(ctx, expr, acc.Username, acc.Email, acc.Phone, acc.Password)
-		if err != nil {
+		if _, err := tx.ExecContext(ctx, accExpr, acc.Username, acc.Email, acc.Phone); err != nil {
 			return err
 		}
 
-		count, err := res.RowsAffected()
-		if err != nil {
+		if _, err := tx.ExecContext(ctx, accpriExpr, acc.Username, acc.Password); err != nil {
 			return err
-		}
-
-		if count != 1 {
-			return errors.New("insert affected row not exactly 1")
 		}
 
 		return nil

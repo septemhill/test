@@ -3,6 +3,7 @@ package module
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
@@ -17,10 +18,36 @@ type SignupInfo struct {
 	Phone    null.String `db:"phone" json:"phone"`
 }
 
+func Login(ctx context.Context, db *db.DB, redis *redis.Client, username, password string) (string, error) {
+	expr := `SELECT COUNT(*) FROM accounts_private WHERE username = $1 AND password = $2`
+
+	if err := txAction(ctx, db, func(tx *sqlx.Tx) error {
+		res := tx.QueryRowxContext(ctx, expr, username, password)
+
+		cnt := 0
+		if err := res.Scan(&cnt); err != nil {
+			return err
+		}
+
+		if cnt < 1 {
+			return errors.New("Invalide username/password")
+		}
+
+		return nil
+	}); err != nil {
+		return "", err
+	}
+
+	token := sessionTokenGenerate()
+	redis.Set(token, "", time.Hour*1)
+
+	return token, nil
+}
+
 func Signup(ctx context.Context, db *db.DB, redis *redis.Client, info SignupInfo) (string, error) {
 	expr := `INSERT INTO non_verified_accounts VALUES(DEFAULT, $1, $2, $3, $4)`
 
-	err := txAction(ctx, db, func(tx *sqlx.Tx) error {
+	if err := txAction(ctx, db, func(tx *sqlx.Tx) error {
 		res, err := tx.ExecContext(ctx, expr, info.Username, info.Password, info.Email, info.Phone)
 		if err != nil {
 			return err
@@ -36,16 +63,14 @@ func Signup(ctx context.Context, db *db.DB, redis *redis.Client, info SignupInfo
 		}
 
 		return nil
-	})
-
-	if err != nil {
+	}); err != nil {
 		return "", err
 	}
 
 	code := generateLink()
 	key := SignupKeyPrefix(code)
 
-	if _, err = redis.Set(key, info.Username, SignUpKeyTimeout).Result(); err != nil {
+	if _, err := redis.Set(key, info.Username, SignUpKeyTimeout).Result(); err != nil {
 		return "", err
 	}
 
@@ -68,7 +93,7 @@ func VerifyUserRegistration(ctx context.Context, db *db.DB, redis *redis.Client,
 	delNonVerify := `DELETE FROM non_verified_accounts WHERE username = $1`
 
 	// TODO: postgres and redis should be in an atomic operation
-	err = txAction(ctx, db, func(tx *sqlx.Tx) error {
+	if err = txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, insAccount, username); err != nil {
 			return err
 		}
@@ -82,9 +107,7 @@ func VerifyUserRegistration(ctx context.Context, db *db.DB, redis *redis.Client,
 		}
 
 		return nil
-	})
-
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
