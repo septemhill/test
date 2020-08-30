@@ -1,7 +1,23 @@
 package api
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
 
-func BlogService(router *gin.Engine) *gin.Engine {
-	return router
+	"github.com/gin-gonic/gin"
+)
+
+type blogHandler struct{}
+
+func (h *blogHandler) Nothing(c *gin.Context) {
+	c.JSON(http.StatusOK, nil)
+}
+
+func BlogService(r gin.IRouter) gin.IRouter {
+	handler := blogHandler{}
+
+	blog := r.Group("/blog")
+	ArticleService(blog)
+	blog.GET("/", handler.Nothing)
+
+	return r
 }

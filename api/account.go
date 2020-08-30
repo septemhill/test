@@ -10,7 +10,9 @@ import (
 	"github.com/septemhill/test/module"
 )
 
-func CreateAccount(c *gin.Context) {
+type accountHandler struct{}
+
+func (h *accountHandler) CreateAccount(c *gin.Context) {
 	acc := new(module.Account)
 
 	requestHandler(c, acc, func(ctx context.Context, db *db.DB, v interface{}) error {
@@ -19,7 +21,7 @@ func CreateAccount(c *gin.Context) {
 	})
 }
 
-func GetAccountInfo(c *gin.Context) {
+func (h *accountHandler) GetAccountInfo(c *gin.Context) {
 	username := c.Param("user")
 	if username == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -42,7 +44,7 @@ func GetAccountInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, acc)
 }
 
-func UpdateAccountInfo(c *gin.Context) {
+func (h *accountHandler) UpdateAccountInfo(c *gin.Context) {
 	acc := new(module.Account)
 
 	requestHandler(c, acc, func(ctx context.Context, db *db.DB, v interface{}) error {
@@ -51,7 +53,7 @@ func UpdateAccountInfo(c *gin.Context) {
 	})
 }
 
-func DeleteAccount(c *gin.Context) {
+func (h *accountHandler) DeleteAccount(c *gin.Context) {
 	acc := new(module.Account)
 
 	requestHandler(c, acc, func(ctx context.Context, db *db.DB, v interface{}) error {
@@ -60,14 +62,15 @@ func DeleteAccount(c *gin.Context) {
 	})
 }
 
-func AccountService(router *gin.Engine) *gin.Engine {
-	account := router.Group("/account")
+func AccountService(r gin.IRouter) gin.IRouter {
+	handler := accountHandler{}
+	account := r.Group("/account")
 
 	account.Use(validateSessionToken)
-	account.PUT("/", CreateAccount)
-	account.POST("/", UpdateAccountInfo)
-	account.GET("/:user", GetAccountInfo)
-	account.DELETE("/", DeleteAccount)
+	account.PUT("/", handler.CreateAccount)
+	account.POST("/", handler.UpdateAccountInfo)
+	account.GET("/:user", handler.GetAccountInfo)
+	account.DELETE("/", handler.DeleteAccount)
 
-	return router
+	return r
 }

@@ -9,7 +9,9 @@ import (
 	"github.com/septemhill/test/module"
 )
 
-func NewPost(c *gin.Context) {
+type articleHandler struct{}
+
+func (h *articleHandler) NewPost(c *gin.Context) {
 	art := new(module.Article)
 
 	requestHandler(c, art, func(ctx context.Context, db *db.DB, v interface{}) error {
@@ -18,7 +20,7 @@ func NewPost(c *gin.Context) {
 	})
 }
 
-func EditPost(c *gin.Context) {
+func (h *articleHandler) EditPost(c *gin.Context) {
 	art := new(module.Article)
 
 	requestHandler(c, art, func(ctx context.Context, db *db.DB, v interface{}) error {
@@ -27,7 +29,7 @@ func EditPost(c *gin.Context) {
 	})
 }
 
-func DeletePost(c *gin.Context) {
+func (h *articleHandler) DeletePost(c *gin.Context) {
 	art := new(module.Article)
 
 	requestHandler(c, art, func(ctx context.Context, db *db.DB, v interface{}) error {
@@ -36,7 +38,7 @@ func DeletePost(c *gin.Context) {
 	})
 }
 
-func GetPosts(c *gin.Context) {
+func (h *articleHandler) GetPosts(c *gin.Context) {
 	pi := paginator{Size: 10, Offset: 0, Ascend: false}
 	if err := c.BindQuery(&pi); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -57,36 +59,42 @@ func GetPosts(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": accs})
 }
 
-func GetPost(c *gin.Context) {
+func (h *articleHandler) GetPost(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
-func NewComment(c *gin.Context) {
+func (h *articleHandler) NewComment(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
-func GetComments(c *gin.Context) {
+func (h *articleHandler) UpdateComment(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
-func DeleteComment(c *gin.Context) {
+func (h *articleHandler) GetComments(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
-func ArticleService(router *gin.Engine) *gin.Engine {
-	article := router.Group("/article")
+func (h *articleHandler) DeleteComment(c *gin.Context) {
+	c.JSON(http.StatusOK, nil)
+}
 
-	//blog.Use(validateSessionToken)
+func ArticleService(r gin.IRouter) gin.IRouter {
+	handler := articleHandler{}
+	article := r.Group("/article")
 
-	article.PUT("/", NewPost)
-	article.POST("/", EditPost)
-	article.GET("/", GetPosts)
-	article.GET("/:postid", GetPost)
-	article.DELETE("/", DeletePost)
+	//article.Use(validateSessionToken)
 
-	article.PUT("/:postid/comment", NewComment)
-	article.GET("/:postid/comment", GetComments)
-	article.DELETE("/:postid/comment/:commentid", DeleteComment)
+	article.PUT("/", handler.NewPost)
+	article.POST("/", handler.EditPost)
+	article.GET("/", handler.GetPosts)
+	article.GET("/:postid", handler.GetPost)
+	article.DELETE("/", handler.DeletePost)
 
-	return router
+	article.PUT("/:postid/comment", handler.NewComment)
+	article.GET("/:postid/comment", handler.GetComments)
+	article.DELETE("/:postid/comment/:commentid", handler.DeleteComment)
+	article.POST("/:postid/comment/:commentid", handler.UpdateComment)
+
+	return r
 }

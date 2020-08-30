@@ -8,8 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type rootHandler struct {
-}
+type rootHandler struct{}
 
 func (h *rootHandler) Login(c *gin.Context) {
 	var acc module.Account
@@ -74,7 +73,7 @@ func (h *rootHandler) VerifyUserRegistration(c *gin.Context) {
 	})
 }
 
-func RootService(r *gin.Engine) *gin.Engine {
+func RootService(r gin.IRouter) gin.IRouter {
 	handler := rootHandler{}
 	root := r.Group("/")
 
