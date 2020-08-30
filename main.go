@@ -15,7 +15,7 @@ func serviceInit() {
 	router.Use(api.SetPostgreSqlDB())
 	router.Use(api.SetRedisDB())
 
-	api.LoadRootAndAccountService(router)
+	api.LoadAllServices(router)
 
 	if len(os.Args) <= 1 {
 		log.Error("port please")
