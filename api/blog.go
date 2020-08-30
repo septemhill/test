@@ -16,7 +16,10 @@ func BlogService(r gin.IRouter) gin.IRouter {
 	handler := blogHandler{}
 
 	blog := r.Group("/blog")
+
+	// Load `Article` API under `Blog`
 	ArticleService(blog)
+
 	blog.GET("/", handler.Nothing)
 
 	return r
