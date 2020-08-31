@@ -39,7 +39,7 @@ func Login(ctx context.Context, db *db.DB, redis *redis.Client, username, passwo
 	}
 
 	token := sessionTokenGenerate()
-	redis.Set(token, "", time.Hour*1)
+	redis.Set(token, username, time.Hour*1)
 
 	return token, nil
 }
