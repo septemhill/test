@@ -54,3 +54,24 @@ func DeletePost(ctx context.Context, db *db.DB, art Article) error {
 func GetPosts(ctx context.Context, db *db.DB, size, offset int, asc bool) ([]Article, error) {
 	return nil, nil
 }
+
+func GetPost(ctx context.Context, db *db.DB, art Article) (*Article, error) {
+	return nil, nil
+}
+
+func NewComment(ctx context.Context, db *db.DB, comment Comment) error {
+	return nil
+}
+
+func UpdateComment(ctx context.Context, db *db.DB, comment Comment) error {
+	return nil
+}
+
+func GetComments(ctx context.Context, db *db.DB, size, offset int, asc bool) ([]Comment, error) {
+	return nil, nil
+}
+
+func DeleteComment(ctx context.Context, db *db.DB, comment Comment) error {
+	//expr := `DELETE FROM comments WHERE id = comment`
+	return nil
+}

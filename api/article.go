@@ -48,7 +48,7 @@ func (h *articleHandler) GetPosts(c *gin.Context) {
 	}
 
 	db := PostgresDB(c)
-	accs, err := module.GetPosts(c, db, pi.Size, pi.Offset, pi.Ascend)
+	arts, err := module.GetPosts(c, db, pi.Size, pi.Offset, pi.Ascend)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"errMessage": err.Error(),
@@ -56,7 +56,7 @@ func (h *articleHandler) GetPosts(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": accs})
+	c.JSON(http.StatusOK, gin.H{"data": arts})
 }
 
 func (h *articleHandler) GetPost(c *gin.Context) {
