@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	"github.com/septemhill/test/db"
 	"github.com/septemhill/test/module"
 )
@@ -15,7 +16,7 @@ type accountHandler struct{}
 func (h *accountHandler) CreateAccount(c *gin.Context) {
 	acc := new(module.Account)
 
-	requestHandler(c, acc, func(ctx context.Context, db *db.DB, v interface{}) error {
+	requestHandler(c, acc, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		acc := v.(*module.Account)
 		return module.CreateAccount(c, db, *acc)
 	})
@@ -47,7 +48,7 @@ func (h *accountHandler) GetAccountInfo(c *gin.Context) {
 func (h *accountHandler) UpdateAccountInfo(c *gin.Context) {
 	acc := new(module.Account)
 
-	requestHandler(c, acc, func(ctx context.Context, db *db.DB, v interface{}) error {
+	requestHandler(c, acc, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		acc := v.(*module.Account)
 		return module.UpdateAccountInfo(c, db, *acc)
 	})
@@ -56,7 +57,7 @@ func (h *accountHandler) UpdateAccountInfo(c *gin.Context) {
 func (h *accountHandler) DeleteAccount(c *gin.Context) {
 	acc := new(module.Account)
 
-	requestHandler(c, acc, func(ctx context.Context, db *db.DB, v interface{}) error {
+	requestHandler(c, acc, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		acc := v.(*module.Account)
 		return module.DeleteAccount(c, db, *acc)
 	})

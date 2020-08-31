@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	"github.com/septemhill/test/db"
 	"github.com/septemhill/test/module"
 )
@@ -14,7 +15,7 @@ type articleHandler struct{}
 func (h *articleHandler) NewPost(c *gin.Context) {
 	art := new(module.Article)
 
-	requestHandler(c, art, func(ctx context.Context, db *db.DB, v interface{}) error {
+	requestHandler(c, art, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		art := v.(*module.Article)
 		return module.NewPost(c, db, *art)
 	})
@@ -23,7 +24,7 @@ func (h *articleHandler) NewPost(c *gin.Context) {
 func (h *articleHandler) EditPost(c *gin.Context) {
 	art := new(module.Article)
 
-	requestHandler(c, art, func(ctx context.Context, db *db.DB, v interface{}) error {
+	requestHandler(c, art, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		art := v.(*module.Article)
 		return module.EditPost(c, db, *art)
 	})
@@ -32,7 +33,7 @@ func (h *articleHandler) EditPost(c *gin.Context) {
 func (h *articleHandler) DeletePost(c *gin.Context) {
 	art := new(module.Article)
 
-	requestHandler(c, art, func(ctx context.Context, db *db.DB, v interface{}) error {
+	requestHandler(c, art, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		art := v.(*module.Article)
 		return module.DeletePost(c, db, *art)
 	})
