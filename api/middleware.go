@@ -51,20 +51,23 @@ func SetLogger() gin.HandlerFunc {
 
 func SetPostgreSqlDB() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set(module.RESOURCE_RDB, db.Connect())
+		d := db.Connect()
+		c.Set(module.RESOURCE_RDB, d)
 		c.Next()
+		d.Close()
 	}
 }
 
 func SetRedisDB() gin.HandlerFunc {
-	rdb := redis.NewClient(&redis.Options{
+	r := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
 
 	return func(c *gin.Context) {
-		c.Set(module.RESOURCE_MDB, rdb)
+		c.Set(module.RESOURCE_MDB, r)
 		c.Next()
+		r.Close()
 	}
 }
