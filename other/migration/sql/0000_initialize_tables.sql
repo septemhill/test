@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS articles (
 	title VARCHAR(100) NOT NULL,
 	content VARCHAR(10000),
 	create_at TIMESTAMPTZ NOT NULL,
-	update_at TIMESTAMPTZ NOT NULL
+	update_at TIMESTAMPTZ NOT NULL,
 	CONSTRAINT fk_author FOREIGN KEY (author) REFERENCES accounts(username)
 );
 
