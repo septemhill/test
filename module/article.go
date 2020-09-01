@@ -7,6 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/septemhill/test/db"
+	"github.com/septemhill/test/errors"
 )
 
 type Article struct {
@@ -21,7 +22,7 @@ type Article struct {
 
 type Comment struct {
 	ID        int       `db:"id" json:"id"`
-	ArticleID int       `db:"art_id" json:"art_id"`
+	ArticleID int       `db:"art_id" json:"art_id" uri:"id"`
 	Author    string    `db:"author" json:"author"`
 	Content   string    `db:"content" json:"content"`
 	CreateAt  time.Time `db:"create_at" json:"createAt"`
@@ -121,12 +122,12 @@ func GetPost(ctx context.Context, db *db.DB, postID int) (*Article, error) {
 	return art, nil
 }
 
-func NewComment(ctx context.Context, db *db.DB, postID string, comment Comment) error {
+func NewComment(ctx context.Context, db *db.DB, postID int, comment Comment) error {
 	expr := `INSERT INTO comments VALUES (DEFAULT, $1, $2, $3, $4, $5)`
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, expr, postID, comment.Author, comment.Content, time.Now(), time.Now()); err != nil {
-			return err
+			return errors.ErrParameter(err)
 		}
 		return nil
 	})

@@ -84,7 +84,18 @@ func (h *articleHandler) GetPost(c *gin.Context) {
 }
 
 func (h *articleHandler) NewComment(c *gin.Context) {
-	c.JSON(http.StatusOK, nil)
+	comment := new(module.Comment)
+	if err := c.ShouldBindUri(comment); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	requestHandler(c, comment, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
+		comment := v.(*module.Comment)
+		return module.NewComment(c, db, comment.ArticleID, *comment)
+	})
 }
 
 func (h *articleHandler) UpdateComment(c *gin.Context) {

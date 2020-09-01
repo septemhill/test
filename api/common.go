@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 	"github.com/septemhill/test/db"
+	"github.com/septemhill/test/errors"
 )
 
 type paginator struct {
@@ -16,6 +17,12 @@ type paginator struct {
 }
 
 type reqAction func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error
+
+func httpErrHandler(c *gin.Context, err errors.HttpError) {
+	c.JSON(err.Code(), gin.H{
+		"errMessage": err.Error(),
+	})
+}
 
 func requestHandler(c *gin.Context, v interface{}, handle reqAction) {
 	if err := c.ShouldBindJSON(v); err != nil {
@@ -29,9 +36,7 @@ func requestHandler(c *gin.Context, v interface{}, handle reqAction) {
 	redis := RedisDB(c)
 
 	if err := handle(c, db, redis, v); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
+		httpErrHandler(c, err.(errors.HttpError))
 		return
 	}
 
