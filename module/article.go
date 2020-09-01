@@ -10,7 +10,7 @@ import (
 )
 
 type Article struct {
-	ID       int       `db:"id" json:"id"`
+	ID       int       `db:"id" json:"id" uri:"id"`
 	Author   string    `db:"author" json:"author"`
 	Title    string    `db:"title" json:"title"`
 	Content  string    `db:"content" json:"content"`
@@ -70,12 +70,12 @@ func GetPosts(ctx context.Context, db *db.DB, size, offset int, asc bool) ([]Art
 	if err != nil {
 		return nil, err
 	}
+	defer tx.Commit()
 
 	rows, err := tx.QueryxContext(ctx, expr, size, offset)
 	if err != nil {
 		return nil, err
 	}
-	tx.Commit()
 
 	arts := make([]Article, 0)
 
@@ -91,8 +91,34 @@ func GetPosts(ctx context.Context, db *db.DB, size, offset int, asc bool) ([]Art
 	return arts, nil
 }
 
-func GetPost(ctx context.Context, db *db.DB, art Article) (*Article, error) {
-	return nil, nil
+func GetPost(ctx context.Context, db *db.DB, postID int) (*Article, error) {
+	expr := `SELECT * FROM articles WHERE id = $1`
+
+	tx, err := db.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	row := tx.QueryRowxContext(ctx, expr, postID)
+	if row.Err() != nil {
+		tx.Rollback()
+		return nil, row.Err()
+	}
+
+	art := new(Article)
+	if err := row.StructScan(art); err != nil {
+		return nil, err
+	}
+	tx.Commit()
+
+	comments, err := GetComments(ctx, db, postID, 10, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	art.Comments = comments
+
+	return art, nil
 }
 
 func NewComment(ctx context.Context, db *db.DB, postID string, comment Comment) error {
@@ -117,13 +143,14 @@ func UpdateComment(ctx context.Context, db *db.DB, comment Comment) error {
 	})
 }
 
-func GetComments(ctx context.Context, db *db.DB, postID string, size, offset int) ([]Comment, error) {
+func GetComments(ctx context.Context, db *db.DB, postID, size, offset int) ([]Comment, error) {
 	expr := `SELECT * FROM comments WHERE art_id = $1 ORDER BY create_at ASC LIMIT $2 OFFSET $3`
 
 	tx, err := db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
+	defer tx.Commit()
 
 	comments := make([]Comment, 0)
 
@@ -131,7 +158,6 @@ func GetComments(ctx context.Context, db *db.DB, postID string, size, offset int
 	if err != nil {
 		return nil, err
 	}
-	tx.Commit()
 
 	for rows.Next() {
 		comment := Comment{}
