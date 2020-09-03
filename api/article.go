@@ -116,16 +116,16 @@ func ArticleService(r gin.IRouter) gin.IRouter {
 
 	//article.Use(validateSessionToken)
 
-	article.PUT("/", handler.NewPost)
-	article.POST("/", handler.EditPost)
+	article.POST("/", handler.NewPost)
+	article.PUT("/", handler.EditPost)
 	article.GET("/", handler.GetPosts)
 	article.GET("/:id", handler.GetPost)
 	article.DELETE("/", handler.DeletePost)
 
-	article.PUT("/:id/comment", handler.NewComment)
+	article.POST("/:id/comment", handler.NewComment)
 	article.GET("/:id/comment", handler.GetComments)
 	article.DELETE("/:id/comment/:commentid", handler.DeleteComment)
-	article.POST("/:id/comment/:commentid", handler.UpdateComment)
+	article.PUT("/:id/comment/:commentid", handler.UpdateComment)
 
 	return r
 }

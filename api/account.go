@@ -68,8 +68,8 @@ func AccountService(r gin.IRouter) gin.IRouter {
 	account := r.Group("/account")
 
 	account.Use(validateSessionToken)
-	account.PUT("/", handler.CreateAccount)
-	account.POST("/", handler.UpdateAccountInfo)
+	account.POST("/", handler.CreateAccount)
+	account.PUT("/", handler.UpdateAccountInfo)
 	account.GET("/:user", handler.GetAccountInfo)
 	account.DELETE("/", handler.DeleteAccount)
 
