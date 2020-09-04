@@ -23,11 +23,11 @@ func CreateAccount(ctx context.Context, db *db.DB, acc Account) (err error) {
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, accExpr, acc.Username, acc.Email, acc.Phone); err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		if _, err := tx.ExecContext(ctx, accpriExpr, acc.Username, acc.Password); err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		return nil
@@ -41,7 +41,7 @@ func GetAccountInfo(ctx context.Context, db *db.DB, acc *Account) error {
 		row := tx.QueryRowxContext(ctx, expr, acc.Username)
 
 		if err := row.StructScan(acc); err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		return nil
@@ -54,16 +54,16 @@ func UpdateAccountInfo(ctx context.Context, db *db.DB, acc Account) error {
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
 		res, err := tx.ExecContext(ctx, expr, acc.Phone, acc.Username)
 		if err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		count, err := res.RowsAffected()
 		if err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		if count != 1 {
-			return errors.New("update affected row not exactly 1")
+			return dbErrHandler(errors.New("update affected row not exactly 1"))
 		}
 
 		return nil
@@ -81,11 +81,11 @@ func DeleteAccount(ctx context.Context, db *db.DB, acc Account) error {
 
 		count, err := res.RowsAffected()
 		if err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		if count != 1 {
-			return errors.New("delete affected row not exactly 1")
+			return dbErrHandler(errors.New("delete affected row not exactly 1"))
 		}
 
 		return nil

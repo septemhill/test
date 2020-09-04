@@ -41,6 +41,18 @@ func (e statusNotFound) Code() int {
 	return http.StatusNotFound
 }
 
+type statusInternalServerError struct {
+	error
+}
+
+func (e statusInternalServerError) Code() int {
+	return http.StatusInternalServerError
+}
+
 func ErrParameter(err error) error {
 	return statusBadRequest{err}
+}
+
+func ErrUnknown(err error) error {
+	return statusInternalServerError{err}
 }

@@ -26,11 +26,11 @@ func Login(ctx context.Context, db *db.DB, redis *redis.Client, username, passwo
 
 		cnt := 0
 		if err := res.Scan(&cnt); err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		if cnt < 1 {
-			return errors.New("Invalide username/password")
+			return dbErrHandler(errors.New("Invalide username/password"))
 		}
 
 		return nil
@@ -50,16 +50,16 @@ func Signup(ctx context.Context, db *db.DB, redis *redis.Client, info SignupInfo
 	if err := txAction(ctx, db, func(tx *sqlx.Tx) error {
 		res, err := tx.ExecContext(ctx, expr, info.Username, info.Password, info.Email, info.Phone)
 		if err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		count, err := res.RowsAffected()
 		if err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		if count != 1 {
-			return errors.New("signup affected row not exactly 1")
+			return dbErrHandler(errors.New("signup affected row not exactly 1"))
 		}
 
 		return nil
@@ -81,11 +81,11 @@ func VerifyUserRegistration(ctx context.Context, db *db.DB, redis *redis.Client,
 	key := SignupKeyPrefix(code)
 	username, err := redis.Get(key).Result()
 	if err != nil {
-		return err
+		return dbErrHandler(err)
 	}
 
 	if username == "" {
-		return errors.New("This link already expired")
+		return dbErrHandler(errors.New("This link already expired"))
 	}
 
 	insAccount := `INSERT INTO accounts SELECT nextval('accounts_id_seq'), username, email, phone FROM non_verified_accounts WHERE username = $1`
@@ -95,25 +95,25 @@ func VerifyUserRegistration(ctx context.Context, db *db.DB, redis *redis.Client,
 	// TODO: postgres and redis should be in an atomic operation
 	if err = txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, insAccount, username); err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		if _, err := tx.ExecContext(ctx, insAccountPrivate, username); err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		if _, err := tx.ExecContext(ctx, delNonVerify, username); err != nil {
-			return err
+			return dbErrHandler(err)
 		}
 
 		return nil
 	}); err != nil {
-		return err
+		return dbErrHandler(err)
 	}
 
 	_, err = redis.Del(key).Result()
 	if err != nil {
-		return err
+		return dbErrHandler(err)
 	}
 
 	return nil

@@ -3,11 +3,15 @@ package module
 import (
 	"context"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 
+	"github.com/jackc/pgconn"
 	"github.com/jmoiron/sqlx"
 	"github.com/septemhill/test/db"
+	ers "github.com/septemhill/test/errors"
 )
 
 func generateLink() string {
@@ -44,4 +48,18 @@ func txAction(ctx context.Context, db *db.DB, txFunc func(*sqlx.Tx) error) (err 
 
 	err = txFunc(tx)
 	return err
+}
+
+func dbErrHandler(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		fmt.Println(pgErr.Code)
+		return ers.ErrParameter(err)
+	}
+
+	return ers.ErrUnknown(err)
 }
