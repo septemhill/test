@@ -57,7 +57,7 @@ func (h *articleHandler) GetPosts(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": arts})
+	sendResponse(c, arts)
 }
 
 func (h *articleHandler) GetPost(c *gin.Context) {
@@ -78,9 +78,7 @@ func (h *articleHandler) GetPost(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"data": arti,
-	})
+	sendResponse(c, arti)
 }
 
 func (h *articleHandler) NewComment(c *gin.Context) {
