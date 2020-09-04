@@ -71,21 +71,16 @@ func UpdateAccountInfo(ctx context.Context, db *db.DB, acc Account) error {
 }
 
 func DeleteAccount(ctx context.Context, db *db.DB, acc Account) error {
-	expr := `DELETE FROM accounts WHERE username = $1 AND email = $2`
+	accExpr := `DELETE FROM accounts WHERE username = $1 AND email = $2`
+	accPriExpr := `DELETE FROM accounts_private WHERE username = $1`
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
-		res, err := tx.ExecContext(ctx, expr, acc.Username, acc.Email)
-		if err != nil {
-			return nil
-		}
-
-		count, err := res.RowsAffected()
-		if err != nil {
+		if _, err := tx.ExecContext(ctx, accPriExpr, acc.Username); err != nil {
 			return dbErrHandler(err)
 		}
 
-		if count != 1 {
-			return dbErrHandler(errors.New("delete affected row not exactly 1"))
+		if _, err := tx.ExecContext(ctx, accExpr, acc.Username, acc.Email); err != nil {
+			return dbErrHandler(err)
 		}
 
 		return nil
