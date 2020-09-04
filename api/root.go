@@ -73,6 +73,32 @@ func (h *rootHandler) VerifyUserRegistration(c *gin.Context) {
 	})
 }
 
+func (h *rootHandler) ForgetPassword(c *gin.Context) {
+	mail := email{}
+	if err := c.BindJSON(&mail); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	db := PostgresDB(c)
+	redis := RedisDB(c)
+
+	if err := module.ForgetPassword(c, db, redis, mail.Email); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
+}
+
+func (h *rootHandler) ResetPassword(c *gin.Context) {
+
+}
+
 func RootService(r gin.IRouter) gin.IRouter {
 	handler := rootHandler{}
 	root := r.Group("/")
@@ -81,6 +107,8 @@ func RootService(r gin.IRouter) gin.IRouter {
 	root.GET("/logout", validateSessionToken, handler.Logout)
 	root.POST("/signup", handler.Signup)
 	root.GET("/verify", handler.VerifyUserRegistration)
+	root.POST("/forget", handler.ForgetPassword)
+	root.GET("/reset", handler.ResetPassword)
 
 	return r
 }

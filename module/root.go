@@ -3,10 +3,12 @@ package module
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/septemhill/test/db"
 	"gopkg.in/guregu/null.v4"
 )
@@ -116,5 +118,33 @@ func VerifyUserRegistration(ctx context.Context, db *db.DB, redis *redis.Client,
 		return err
 	}
 
+	return nil
+}
+
+func ForgetPassword(ctx context.Context, db *db.DB, redis *redis.Client, email string) error {
+	expr := `SELECT * FROM accounts WHERE email = $1`
+	// 1. Check email exist
+	row := db.QueryRowxContext(ctx, expr, email)
+	if row.Err() != nil {
+		//var pgErr *pgx.PgError
+		//if errors.As(row.Err(), &pgErr) && pgErr.Code == pgerrcode.NoData {
+		//	return row.Err()
+		//}
+		return row.Err()
+	}
+
+	//var count int
+	acc := Account{}
+	if err := row.StructScan(&acc); err != nil {
+		if perr, ok := err.(*pq.Error); ok {
+			fmt.Println("AAAAA", perr)
+		}
+	}
+
+	fmt.Println("SSS", email)
+
+	// 2. Generate hash code
+	// 3. Set hash code in redis
+	// 4. Send email link with hash code
 	return nil
 }

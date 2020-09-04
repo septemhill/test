@@ -20,6 +20,10 @@ type paginator struct {
 	Ascend bool `form:"asc"`
 }
 
+type email struct {
+	Email string `json:"email"`
+}
+
 type reqAction func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error
 
 func httpErrHandler(c *gin.Context, err errors.HttpError) {
