@@ -38,9 +38,7 @@ func GetAccountInfo(ctx context.Context, db *db.DB, acc *Account) error {
 	expr := `SELECT email, phone FROM accounts WHERE username = $1`
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
-		row := tx.QueryRowxContext(ctx, expr, acc.Username)
-
-		if err := row.StructScan(acc); err != nil {
+		if err := tx.GetContext(ctx, acc, expr, acc.Username); err != nil {
 			return err
 		}
 

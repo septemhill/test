@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/septemhill/test/module"
-	"github.com/sirupsen/logrus"
 )
 
 type rootHandler struct{}
@@ -45,9 +44,8 @@ func (h *rootHandler) Logout(c *gin.Context) {
 }
 
 func (h *rootHandler) Signup(c *gin.Context) {
-	f := logrus.Fields{}
 
-	c.JSON(http.StatusOK, f)
+	c.JSON(http.StatusOK, nil)
 }
 
 func (h *rootHandler) VerifyUserRegistration(c *gin.Context) {
@@ -85,7 +83,7 @@ func (h *rootHandler) ForgetPassword(c *gin.Context) {
 	db := PostgresDB(c)
 	redis := RedisDB(c)
 
-	if err := module.ForgetPassword(c, db, redis, mail.Email); err != nil {
+	if _, err := module.ForgetPassword(c, db, redis, mail.Email); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),
 		})
