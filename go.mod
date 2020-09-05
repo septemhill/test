@@ -3,6 +3,7 @@ module github.com/septemhill/test
 go 1.14
 
 require (
+	github.com/caarlos0/env/v6 v6.3.0
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/jackc/pgconn v1.6.4
@@ -14,5 +15,7 @@ require (
 	github.com/prometheus/common v0.12.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.5.1
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/guregu/null.v4 v4.0.0
 )
