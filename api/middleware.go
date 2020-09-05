@@ -2,12 +2,12 @@ package api
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 	"github.com/septemhill/test/db"
 	"github.com/septemhill/test/module"
+	"github.com/septemhill/test/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -33,16 +33,11 @@ func PostgresDB(c *gin.Context) *db.DB {
 	return c.MustGet(module.RESOURCE_RDB).(*db.DB)
 }
 
-func SetLogger() gin.HandlerFunc {
-	f, err := os.OpenFile("api.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0775)
-	if err != nil {
-		panic("logger initialize failed: " + err.Error())
-	}
+func Mailer(c *gin.Context) *utils.Mailer {
+	return c.MustGet(module.RESOURCE_MAILER).(*utils.Mailer)
+}
 
-	logger := logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
-	logger.SetOutput(f)
-
+func SetLogger(logger *logrus.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set(module.RESOURCE_LOG, logger)
 		c.Next()
@@ -69,5 +64,12 @@ func SetRedisDB() gin.HandlerFunc {
 		c.Set(module.RESOURCE_MDB, r)
 		c.Next()
 		r.Close()
+	}
+}
+
+func SetMailer(mailer *utils.Mailer) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set(module.RESOURCE_MAILER, mailer)
+		c.Next()
 	}
 }
