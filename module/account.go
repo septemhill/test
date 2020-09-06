@@ -26,7 +26,7 @@ func CreateAccount(ctx context.Context, db *db.DB, acc Account) (err error) {
 			return err
 		}
 
-		if _, err := tx.ExecContext(ctx, accpriExpr, acc.Username, acc.Password); err != nil {
+		if _, err := tx.ExecContext(ctx, accpriExpr, acc.Email, acc.Password); err != nil {
 			return err
 		}
 

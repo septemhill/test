@@ -22,6 +22,12 @@ type MailInfo struct {
 	Type    MailType
 }
 
+const ForgetPasswordLetterTemplate = `
+	<img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" />
+	<h1>Hi, Septem</h1>
+	<p>Click the link address to reset your password: <a href="http://localhost:3000/reset?code={{ .Code }}">Confirm Email</a></p>
+`
+
 type Mailer struct {
 	Host     string `env:"MAILER_SERVER_HOST"`
 	Port     int    `env:"MAILER_SERVER_SMTP_PORT" envDefault:"587"`
