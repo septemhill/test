@@ -25,13 +25,7 @@ func NewLogger() *logrus.Logger {
 }
 
 func NewMailer() *utils.Mailer {
-	//mailer := new(utils.Mailer)
-	mailer := &utils.Mailer{
-		Host:     "smtp.gmail.com",
-		Port:     587,
-		User:     "septemhill@gmail.com",
-		Password: "ntiofslamjztwjjm",
-	}
+	mailer := new(utils.Mailer)
 	if err := env.Parse(mailer); err != nil {
 		panic("failed on initialize mail info" + err.Error())
 	}
