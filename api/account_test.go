@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -26,7 +27,6 @@ func TestCreateAccount(t *testing.T) {
 	tests := []struct {
 		Description string
 		Account     module.Account
-		Err         error
 		StatusCode  int
 		Clean       bool
 	}{
@@ -37,7 +37,6 @@ func TestCreateAccount(t *testing.T) {
 				Password: "user0001",
 				Email:    "user0001@gmail.com",
 			},
-			Err:        nil,
 			StatusCode: http.StatusOK,
 			Clean:      true,
 		}, {
@@ -47,7 +46,6 @@ func TestCreateAccount(t *testing.T) {
 				Password: "user0002",
 				Email:    "user0001@gmail.com",
 			},
-			Err:        nil,
 			StatusCode: http.StatusInternalServerError,
 			Clean:      false,
 		}, {
@@ -57,7 +55,6 @@ func TestCreateAccount(t *testing.T) {
 				Password: "user0003",
 				Email:    "user0003@gmail.com",
 			},
-			Err:        nil,
 			StatusCode: http.StatusInternalServerError,
 			Clean:      false,
 		}, {
@@ -67,7 +64,6 @@ func TestCreateAccount(t *testing.T) {
 				Password: "user0004",
 				Email:    "user0004@gmail.com",
 			},
-			Err:        nil,
 			StatusCode: http.StatusOK,
 			Clean:      true,
 		},
@@ -110,7 +106,7 @@ func TestDeleteAccount(t *testing.T) {
 			Username: "user0001",
 			Password: "user0001",
 			Email:    "user0001@gmail.com",
-			Phone:    null.NewString("12345", true),
+			Phone:    null.StringFrom("12345"),
 		},
 	}
 
@@ -121,7 +117,6 @@ func TestDeleteAccount(t *testing.T) {
 	tests := []struct {
 		Description string
 		Account     module.Account
-		Err         error
 		StatusCode  int
 	}{
 		{
@@ -130,7 +125,6 @@ func TestDeleteAccount(t *testing.T) {
 				Username: "user0001",
 				Email:    "user0001@gmail.com",
 			},
-			Err:        nil,
 			StatusCode: http.StatusOK,
 		}, {
 			Description: "Delete user already be deleted",
@@ -138,7 +132,6 @@ func TestDeleteAccount(t *testing.T) {
 				Username: "user0001",
 				Email:    "user0001@gmail.com",
 			},
-			Err:        nil,
 			StatusCode: http.StatusOK,
 		}, {
 			Description: "Delete user which never registered",
@@ -146,7 +139,6 @@ func TestDeleteAccount(t *testing.T) {
 				Username: "user0099",
 				Email:    "user0099@gmail.com",
 			},
-			Err:        nil,
 			StatusCode: http.StatusOK,
 		},
 	}
@@ -164,6 +156,98 @@ func TestDeleteAccount(t *testing.T) {
 			defer rsp.Body.Close()
 
 			assert.Equal(test.StatusCode, rsp.StatusCode)
+		})
+	}
+}
+
+func TestUpdateAndGetAccountInfo(t *testing.T) {
+	ts := newTestRouter(gin.Default(), AccountService)
+	d, r := newTestDB()
+	defer func() {
+		d.Close()
+		r.Close()
+	}()
+
+	assert := assert.New(t)
+
+	users := []module.Account{
+		{
+			Username: "user0001",
+			Email:    "user0001@gmail.com",
+			Phone:    null.StringFrom("0912345678"),
+		},
+	}
+
+	for _, user := range users {
+		module.CreateAccount(context.Background(), d, user)
+	}
+
+	defer func() {
+		for _, user := range users {
+			module.DeleteAccount(context.Background(), d, user)
+		}
+	}()
+
+	tests := []struct {
+		Description      string
+		Account          module.Account
+		UpdateStatusCode int
+		GetStatusCode    int
+	}{
+		{
+			Description: "Update exised account information and get it back to verify",
+			Account: module.Account{
+				Username: "user0001",
+				Email:    "user0001@gmail.com",
+				Phone:    null.StringFrom("0909111222"),
+			},
+			UpdateStatusCode: http.StatusOK,
+			GetStatusCode:    http.StatusOK,
+		}, {
+			Description: "Update an non-exist account information",
+			Account: module.Account{
+				Username: "user0004",
+			},
+			UpdateStatusCode: http.StatusOK,
+			GetStatusCode:    http.StatusNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Description, func(t *testing.T) {
+			b, err := json.Marshal(&test.Account)
+			assert.NoError(err)
+
+			ureq, err := http.NewRequest("PUT", ts.URL+"/account/", bytes.NewBuffer(b))
+			assert.NoError(err)
+
+			ursp, err := http.DefaultClient.Do(ureq)
+			assert.NoError(err)
+			defer ursp.Body.Close()
+
+			assert.Equal(test.UpdateStatusCode, ursp.StatusCode)
+
+			greq, err := http.NewRequest("GET", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b))
+			assert.NoError(err)
+
+			grsp, err := http.DefaultClient.Do(greq)
+			assert.NoError(err)
+			defer grsp.Body.Close()
+
+			assert.Equal(test.GetStatusCode, grsp.StatusCode)
+
+			if test.GetStatusCode == http.StatusNotFound {
+				return
+			}
+
+			acc := module.Account{}
+			body, err := ioutil.ReadAll(grsp.Body)
+			assert.NoError(err)
+
+			err = json.Unmarshal(body, &acc)
+			assert.NoError(err)
+
+			assert.Equal(test.Account, acc)
 		})
 	}
 }

@@ -14,7 +14,7 @@ import (
 func NewLogger() *logrus.Logger {
 	f, err := os.OpenFile("api.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0775)
 	if err != nil {
-		panic("logger initialize failed: " + err.Error())
+		panic("failed on logger initialize: " + err.Error())
 	}
 
 	logger := logrus.New()
@@ -27,7 +27,7 @@ func NewLogger() *logrus.Logger {
 func NewMailer() *utils.Mailer {
 	mailer := new(utils.Mailer)
 	if err := env.Parse(mailer); err != nil {
-		panic("failed on initialize mail info" + err.Error())
+		panic("failed on initialize mailer: " + err.Error())
 	}
 
 	return mailer

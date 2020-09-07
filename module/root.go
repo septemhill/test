@@ -53,7 +53,7 @@ func Signup(ctx context.Context, db *db.DB, redis *redis.Client, info SignupInfo
 		return "", err
 	}
 
-	code := generateLink()
+	code := generateRandomString()
 	key := SignupKeyPrefix(code)
 
 	if _, err := redis.Set(key, info.Email, SignUpKeyTimeout).Result(); err != nil {
@@ -120,7 +120,7 @@ func ForgetPassword(ctx context.Context, db *db.DB, redis *redis.Client, email s
 	}
 
 	// 2. Generate hash code
-	code := generateLink()
+	code := generateRandomString()
 
 	// 3. Set hash code in redis
 	if _, err := redis.Set(ForgetPasswordKeyPrefix(code), email, ForgetPasswdKeyTimeout).Result(); err != nil {

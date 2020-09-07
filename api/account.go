@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 
@@ -36,6 +37,10 @@ func (h *accountHandler) GetAccountInfo(c *gin.Context) {
 
 	db := PostgresDB(c)
 	if err := module.GetAccountInfo(c, db, &acc); err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, nil)
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"errMessage": err.Error(),
 		})

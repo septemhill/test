@@ -51,7 +51,6 @@ func UpdateAccountInfo(ctx context.Context, db *db.DB, acc Account) error {
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
 		var id int
-
 		if err := tx.GetContext(ctx, &id, expr, acc.Phone, acc.Username); err != nil {
 			return err
 		}
