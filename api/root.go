@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/septemhill/test/middleware"
 	"github.com/septemhill/test/module"
 	"github.com/septemhill/test/utils"
 )
@@ -22,8 +23,8 @@ func (h *rootHandler) Login(c *gin.Context) {
 		return
 	}
 
-	db := PostgresDB(c)
-	redis := RedisDB(c)
+	db := middleware.PostgresDB(c)
+	redis := middleware.RedisDB(c)
 
 	code, err := module.Login(c, db, redis, acc.Email, acc.Password)
 	if err != nil {
@@ -41,8 +42,8 @@ func (h *rootHandler) Login(c *gin.Context) {
 }
 
 func (h *rootHandler) Logout(c *gin.Context) {
-	token := c.GetHeader(HEADER_SESSION_TOKEN)
-	rdb := RedisDB(c)
+	token := c.GetHeader(utils.HEADER_SESSION_TOKEN)
+	rdb := middleware.RedisDB(c)
 	rdb.Del(token)
 }
 
@@ -60,8 +61,8 @@ func (h *rootHandler) VerifyUserRegistration(c *gin.Context) {
 		return
 	}
 
-	db := PostgresDB(c)
-	redis := RedisDB(c)
+	db := middleware.PostgresDB(c)
+	redis := middleware.RedisDB(c)
 
 	if err := module.VerifyUserRegistration(c, db, redis, code); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -83,9 +84,9 @@ func (h *rootHandler) ForgetPassword(c *gin.Context) {
 		return
 	}
 
-	db := PostgresDB(c)
-	redis := RedisDB(c)
-	mailer := Mailer(c)
+	db := middleware.PostgresDB(c)
+	redis := middleware.RedisDB(c)
+	mailer := middleware.Mailer(c)
 
 	code, err := module.ForgetPassword(c, db, redis, mail.Email)
 	if err != nil {
@@ -145,8 +146,8 @@ func (h *rootHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	db := PostgresDB(c)
-	redis := RedisDB(c)
+	db := middleware.PostgresDB(c)
+	redis := middleware.RedisDB(c)
 
 	if err := module.ResetPassword(c, db, redis, code.Code, pass.Password); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -165,7 +166,7 @@ func RootService(r gin.IRouter) gin.IRouter {
 	root := r.Group("/")
 
 	root.POST("/login", handler.Login)
-	root.GET("/logout", validateSessionToken, handler.Logout)
+	root.GET("/logout", middleware.ValidateSessionToken, handler.Logout)
 	root.POST("/signup", handler.Signup)
 	root.GET("/verify", handler.VerifyUserRegistration)
 	root.POST("/forget", handler.ForgetPassword)

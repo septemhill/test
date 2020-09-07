@@ -1,4 +1,4 @@
-package api
+package utils
 
 const (
 	HEADER_SESSION_TOKEN = "sessionToken"

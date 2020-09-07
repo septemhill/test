@@ -10,13 +10,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/septemhill/test/module"
+	test "github.com/septemhill/test/testing"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/guregu/null.v4"
 )
 
 func TestCreateAccount(t *testing.T) {
-	ts := newTestRouter(gin.Default(), AccountService)
-	d, r := newTestDB()
+	ts := test.NewTestRouter(gin.Default(), AccountService)
+	d, r := test.NewTestDB()
 	defer func() {
 		d.Close()
 		r.Close()
@@ -92,8 +93,8 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestDeleteAccount(t *testing.T) {
-	ts := newTestRouter(gin.Default(), AccountService)
-	d, r := newTestDB()
+	ts := test.NewTestRouter(gin.Default(), AccountService)
+	d, r := test.NewTestDB()
 	defer func() {
 		d.Close()
 		r.Close()
@@ -161,8 +162,8 @@ func TestDeleteAccount(t *testing.T) {
 }
 
 func TestUpdateAndGetAccountInfo(t *testing.T) {
-	ts := newTestRouter(gin.Default(), AccountService)
-	d, r := newTestDB()
+	ts := test.NewTestRouter(gin.Default(), AccountService)
+	d, r := test.NewTestDB()
 	defer func() {
 		d.Close()
 		r.Close()

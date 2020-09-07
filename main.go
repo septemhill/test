@@ -7,6 +7,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-gonic/gin"
 	"github.com/septemhill/test/api"
+	"github.com/septemhill/test/middleware"
 	"github.com/septemhill/test/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -36,10 +37,10 @@ func NewMailer() *utils.Mailer {
 func serviceInit() {
 	router := gin.Default()
 
-	router.Use(api.SetLogger(NewLogger()))
-	router.Use(api.SetPostgreSqlDB())
-	router.Use(api.SetRedisDB())
-	router.Use(api.SetMailer(NewMailer()))
+	router.Use(middleware.SetLogger(NewLogger()))
+	router.Use(middleware.SetPostgreSqlDB())
+	router.Use(middleware.SetRedisDB())
+	router.Use(middleware.SetMailer(NewMailer()))
 
 	api.LoadAllServices(router)
 

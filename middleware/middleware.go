@@ -1,4 +1,4 @@
-package api
+package middleware
 
 import (
 	"net/http"
@@ -11,8 +11,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func validateSessionToken(c *gin.Context) {
-	token := c.GetHeader(HEADER_SESSION_TOKEN)
+func ValidateSessionToken(c *gin.Context) {
+	token := c.GetHeader(utils.HEADER_SESSION_TOKEN)
 	rdb := RedisDB(c)
 	if _, err := rdb.Get(token).Result(); err == redis.Nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"errMessage": "Invalid session token"})

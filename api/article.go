@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 	"github.com/septemhill/test/db"
+	"github.com/septemhill/test/middleware"
 	"github.com/septemhill/test/module"
 )
 
@@ -48,7 +49,7 @@ func (h *articleHandler) GetPosts(c *gin.Context) {
 		return
 	}
 
-	db := PostgresDB(c)
+	db := middleware.PostgresDB(c)
 	arts, err := module.GetPosts(c, db, pi.Size, pi.Offset, pi.Ascend)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -69,7 +70,7 @@ func (h *articleHandler) GetPost(c *gin.Context) {
 		return
 	}
 
-	db := PostgresDB(c)
+	db := middleware.PostgresDB(c)
 	arti, err := module.GetPost(c, db, art.ID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

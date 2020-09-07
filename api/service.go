@@ -1,10 +1,11 @@
 package api
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/septemhill/test/utils"
+)
 
-type ServiceAPI func(gin.IRouter) gin.IRouter
-
-func loadServices(r gin.IRouter, apis ...ServiceAPI) {
+func loadServices(r gin.IRouter, apis ...utils.ServiceAPI) {
 	for _, f := range apis {
 		f(r)
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 	"github.com/septemhill/test/db"
+	"github.com/septemhill/test/middleware"
 	"github.com/septemhill/test/module"
 )
 
@@ -35,7 +36,7 @@ func (h *accountHandler) GetAccountInfo(c *gin.Context) {
 	var acc module.Account
 	acc.Username = username
 
-	db := PostgresDB(c)
+	db := middleware.PostgresDB(c)
 	if err := module.GetAccountInfo(c, db, &acc); err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, nil)
@@ -82,7 +83,8 @@ func AccountService(r gin.IRouter) gin.IRouter {
 	handler := accountHandler{}
 	account := r.Group("/account")
 
-	account.Use(validateSessionToken)
+	account.Use(middleware.ValidateSessionToken)
+
 	account.POST("/", handler.CreateAccount)
 	account.PUT("/", handler.UpdateAccountInfo)
 	account.GET("/:user", handler.GetAccountInfo)

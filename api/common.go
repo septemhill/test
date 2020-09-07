@@ -13,6 +13,8 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/jackc/pgconn"
 	"github.com/septemhill/test/db"
+	"github.com/septemhill/test/middleware"
+	"github.com/septemhill/test/utils"
 )
 
 type password struct {
@@ -63,8 +65,8 @@ func requestHandler(c *gin.Context, v interface{}, handle reqAction) {
 		return
 	}
 
-	db := PostgresDB(c)
-	redis := RedisDB(c)
+	db := middleware.PostgresDB(c)
+	redis := middleware.RedisDB(c)
 
 	if err := handle(c, db, redis, v); err != nil {
 		httpErrHandler(c, err)
@@ -96,12 +98,12 @@ func sendResponse(c *gin.Context, v interface{}) {
 		return
 	}
 
-	if c.GetHeader(HEADER_IF_NOT_MATCH) == eTag {
+	if c.GetHeader(utils.HEADER_IF_NOT_MATCH) == eTag {
 		c.JSON(http.StatusNotModified, nil)
 		return
 	}
 
-	c.Header(HEADER_ETAG, eTag)
+	c.Header(utils.HEADER_ETAG, eTag)
 	c.JSON(http.StatusOK, gin.H{
 		"data": v,
 	})

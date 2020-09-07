@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
 	"github.com/septemhill/test/db"
+	"github.com/septemhill/test/utils"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -31,7 +32,7 @@ func Login(ctx context.Context, db *db.DB, redis *redis.Client, email, password 
 		return "", err
 	}
 
-	token := sessionTokenGenerate()
+	token := utils.GenerateRandomString(utils.RANDOM_HEX_ONLY, SESSION_TOKEN_LEN)
 
 	if _, err := redis.Set(token, email, time.Hour*1).Result(); err != nil {
 		return "", err
@@ -53,7 +54,7 @@ func Signup(ctx context.Context, db *db.DB, redis *redis.Client, info SignupInfo
 		return "", err
 	}
 
-	code := generateRandomString()
+	code := utils.GenerateRandomString(utils.RANDOM_ALL, FORGET_PASSWD_LEN)
 	key := SignupKeyPrefix(code)
 
 	if _, err := redis.Set(key, info.Email, SignUpKeyTimeout).Result(); err != nil {
@@ -120,7 +121,7 @@ func ForgetPassword(ctx context.Context, db *db.DB, redis *redis.Client, email s
 	}
 
 	// 2. Generate hash code
-	code := generateRandomString()
+	code := utils.GenerateRandomString(utils.RANDOM_ALL, SIGNUP_TOKEN_LEN)
 
 	// 3. Set hash code in redis
 	if _, err := redis.Set(ForgetPasswordKeyPrefix(code), email, ForgetPasswdKeyTimeout).Result(); err != nil {
