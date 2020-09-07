@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/septemhill/test/module"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/guregu/null.v4"
 )
 
 func TestCreateAccount(t *testing.T) {
@@ -104,12 +105,24 @@ func TestDeleteAccount(t *testing.T) {
 
 	assert := assert.New(t)
 
+	users := []module.Account{
+		{
+			Username: "user0001",
+			Password: "user0001",
+			Email:    "user0001@gmail.com",
+			Phone:    null.NewString("12345", true),
+		},
+	}
+
+	for _, user := range users {
+		module.CreateAccount(context.Background(), d, user)
+	}
+
 	tests := []struct {
 		Description string
 		Account     module.Account
 		Err         error
 		StatusCode  int
-		Clean       bool
 	}{
 		{
 			Description: "Delete matched username and email pair",
@@ -119,25 +132,22 @@ func TestDeleteAccount(t *testing.T) {
 			},
 			Err:        nil,
 			StatusCode: http.StatusOK,
-			Clean:      false,
 		}, {
-			Description: "Delete user with correct username but with incorrect email",
+			Description: "Delete user already be deleted",
 			Account: module.Account{
-				Username: "user0002",
+				Username: "user0001",
+				Email:    "user0001@gmail.com",
+			},
+			Err:        nil,
+			StatusCode: http.StatusOK,
+		}, {
+			Description: "Delete user which neven registered",
+			Account: module.Account{
+				Username: "user0099",
 				Email:    "user0099@gmail.com",
 			},
 			Err:        nil,
 			StatusCode: http.StatusOK,
-			Clean:      false,
-		}, {
-			Description: "Delete user with correct email but incorrect username",
-			Account: module.Account{
-				Username: "user0099",
-				Email:    "user0003@gmail.com",
-			},
-			Err:        nil,
-			StatusCode: http.StatusOK,
-			Clean:      false,
 		},
 	}
 

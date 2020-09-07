@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha512"
+	"database/sql"
 	"encoding/gob"
 	"encoding/hex"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
+	"github.com/jackc/pgconn"
 	"github.com/septemhill/test/db"
-	"github.com/septemhill/test/errors"
 )
 
 type password struct {
@@ -30,8 +32,25 @@ type email struct {
 
 type reqAction func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error
 
-func httpErrHandler(c *gin.Context, err errors.HttpError) {
-	c.JSON(err.Code(), gin.H{
+func httpErrHandler(c *gin.Context, err error) {
+	// errors from pgx driver
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"errMessage": pgErr.Code + ":" + pgErr.Error(),
+		})
+		return
+	}
+
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "successful",
+		})
+		return
+	}
+
+	// Unknown error type
+	c.JSON(http.StatusInternalServerError, gin.H{
 		"errMessage": err.Error(),
 	})
 }
@@ -48,7 +67,7 @@ func requestHandler(c *gin.Context, v interface{}, handle reqAction) {
 	redis := RedisDB(c)
 
 	if err := handle(c, db, redis, v); err != nil {
-		httpErrHandler(c, err.(errors.HttpError))
+		httpErrHandler(c, err)
 		return
 	}
 

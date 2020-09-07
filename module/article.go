@@ -32,7 +32,7 @@ func NewPost(ctx context.Context, db *db.DB, art Article) error {
 	expr := `INSERT INTO articles VALUES (DEFAULT, $1, $2, $3, $4, $5)`
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, expr, art.Author, art.Title, art.Content, time.Now(), time.Now()); err != nil {
-			return dbErrHandler(err)
+			return err
 		}
 		return nil
 	})
@@ -42,7 +42,7 @@ func EditPost(ctx context.Context, db *db.DB, art Article) error {
 	expr := `UPDATE articles SET title = $1, content = $2, update_at = $3 WHERE id = $4`
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, expr, art.Title, art.Content, time.Now(), art.ID); err != nil {
-			return dbErrHandler(err)
+			return err
 		}
 		return nil
 	})
@@ -52,7 +52,7 @@ func DeletePost(ctx context.Context, db *db.DB, art Article) error {
 	expr := `DELETE FROM articles WHERE id = $1`
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, expr, art.ID); err != nil {
-			return dbErrHandler(err)
+			return err
 		}
 		return nil
 	})
@@ -106,7 +106,7 @@ func NewComment(ctx context.Context, db *db.DB, postID int, comment Comment) err
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, expr, postID, comment.Author, comment.Content, time.Now(), time.Now()); err != nil {
-			return dbErrHandler(err)
+			return err
 		}
 		return nil
 	})
@@ -117,7 +117,7 @@ func UpdateComment(ctx context.Context, db *db.DB, comment Comment) error {
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, expr, comment.ID); err != nil {
-			return dbErrHandler(err)
+			return err
 		}
 		return nil
 	})
@@ -143,7 +143,7 @@ func DeleteComment(ctx context.Context, db *db.DB, comment Comment) error {
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, expr, comment.ID); err != nil {
-			return dbErrHandler(err)
+			return err
 		}
 		return nil
 	})

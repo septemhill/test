@@ -41,23 +41,13 @@ func Login(ctx context.Context, db *db.DB, redis *redis.Client, email, password 
 }
 
 func Signup(ctx context.Context, db *db.DB, redis *redis.Client, info SignupInfo) (string, error) {
-	expr := `INSERT INTO non_verified_accounts VALUES(DEFAULT, $1, $2, $3, $4)`
+	expr := `INSERT INTO non_verified_accounts VALUES(DEFAULT, $1, $2, $3, $4) RETURNING id`
 
 	if err := txAction(ctx, db, func(tx *sqlx.Tx) error {
-		res, err := tx.ExecContext(ctx, expr, info.Username, info.Password, info.Email, info.Phone)
-		if err != nil {
-			return dbErrHandler(err)
+		var id int
+		if err := tx.GetContext(ctx, &id, expr, info.Username, info.Password, info.Email, info.Phone); err != nil {
+			return err
 		}
-
-		count, err := res.RowsAffected()
-		if err != nil {
-			return dbErrHandler(err)
-		}
-
-		if count != 1 {
-			return dbErrHandler(errors.New("signup affected row not exactly 1"))
-		}
-
 		return nil
 	}); err != nil {
 		return "", err
@@ -77,7 +67,7 @@ func VerifyUserRegistration(ctx context.Context, db *db.DB, redis *redis.Client,
 	key := SignupKeyPrefix(code)
 	email, err := redis.Get(key).Result()
 	if err != nil {
-		return dbErrHandler(err)
+		return err
 	}
 
 	if email == "" {
@@ -104,7 +94,7 @@ func VerifyUserRegistration(ctx context.Context, db *db.DB, redis *redis.Client,
 
 		return nil
 	}); err != nil {
-		return dbErrHandler(err)
+		return err
 	}
 
 	if _, err := redis.Del(key).Result(); err != nil {

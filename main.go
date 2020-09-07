@@ -52,5 +52,5 @@ func serviceInit() {
 }
 
 func main() {
-	//serviceInit()
+	serviceInit()
 }

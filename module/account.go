@@ -2,7 +2,6 @@ package module
 
 import (
 	"context"
-	"errors"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/septemhill/test/db"
@@ -18,15 +17,16 @@ type Account struct {
 }
 
 func CreateAccount(ctx context.Context, db *db.DB, acc Account) (err error) {
-	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3)`
-	accpriExpr := `INSERT INTO accounts_private VALUES (DEFAULT, $1, $2)`
+	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3) RETURNING id`
+	accPriExpr := `INSERT INTO accounts_private VALUES (DEFAULT, $1, $2) RETURNING id`
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
-		if _, err := tx.ExecContext(ctx, accExpr, acc.Username, acc.Email, acc.Phone); err != nil {
-			return dbErrHandler(err)
+		var id int
+		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email, acc.Phone); err != nil {
+			return err
 		}
 
-		if _, err := tx.ExecContext(ctx, accpriExpr, acc.Email, acc.Password); err != nil {
+		if err := tx.GetContext(ctx, &id, accPriExpr, acc.Email, acc.Password); err != nil {
 			return err
 		}
 
@@ -47,21 +47,13 @@ func GetAccountInfo(ctx context.Context, db *db.DB, acc *Account) error {
 }
 
 func UpdateAccountInfo(ctx context.Context, db *db.DB, acc Account) error {
-	expr := `UPDATE accounts SET phone = $1 WHERE username = $2`
+	expr := `UPDATE accounts SET phone = $1 WHERE username = $2 RETURNING id`
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
-		res, err := tx.ExecContext(ctx, expr, acc.Phone, acc.Username)
-		if err != nil {
-			return dbErrHandler(err)
-		}
+		var id int
 
-		count, err := res.RowsAffected()
-		if err != nil {
-			return dbErrHandler(err)
-		}
-
-		if count != 1 {
-			return dbErrHandler(errors.New("update affected row not exactly 1"))
+		if err := tx.GetContext(ctx, &id, expr, acc.Phone, acc.Username); err != nil {
+			return err
 		}
 
 		return nil
@@ -69,16 +61,18 @@ func UpdateAccountInfo(ctx context.Context, db *db.DB, acc Account) error {
 }
 
 func DeleteAccount(ctx context.Context, db *db.DB, acc Account) error {
-	accExpr := `DELETE FROM accounts WHERE username = $1 AND email = $2`
-	accPriExpr := `DELETE FROM accounts_private WHERE username = $1`
+	accExpr := `DELETE FROM accounts WHERE username = $1 AND email = $2 RETURNING id`
+	accPriExpr := `DELETE FROM accounts_private WHERE email = $1 RETURNING id`
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
-		if _, err := tx.ExecContext(ctx, accPriExpr, acc.Username); err != nil {
-			return dbErrHandler(err)
+		var id int
+
+		if err := tx.GetContext(ctx, &id, accPriExpr, acc.Email); err != nil {
+			return err
 		}
 
-		if _, err := tx.ExecContext(ctx, accExpr, acc.Username, acc.Email); err != nil {
-			return dbErrHandler(err)
+		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email); err != nil {
+			return err
 		}
 
 		return nil
