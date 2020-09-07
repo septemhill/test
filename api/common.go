@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha512"
-	"database/sql"
 	"encoding/gob"
 	"encoding/hex"
 	"errors"
@@ -42,12 +41,13 @@ func httpErrHandler(c *gin.Context, err error) {
 		return
 	}
 
-	if err == sql.ErrNoRows {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "successful",
-		})
-		return
-	}
+	//TODO: Each CRUD need to handle itself if get sql.ErrNoRows issue
+	//	if err == sql.ErrNoRows {
+	//		c.JSON(http.StatusOK, gin.H{
+	//			"message": "successful",
+	//		})
+	//		return
+	//	}
 
 	// Unknown error type
 	c.JSON(http.StatusInternalServerError, gin.H{
