@@ -133,14 +133,14 @@ func TestDeleteAccount(t *testing.T) {
 				Username: "user0001",
 				Email:    "user0001@gmail.com",
 			},
-			StatusCode: http.StatusOK,
+			StatusCode: http.StatusNotFound,
 		}, {
 			Description: "Delete user which never registered",
 			Account: module.Account{
 				Username: "user0099",
 				Email:    "user0099@gmail.com",
 			},
-			StatusCode: http.StatusOK,
+			StatusCode: http.StatusNotFound,
 		},
 	}
 

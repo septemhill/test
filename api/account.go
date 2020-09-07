@@ -21,6 +21,8 @@ func (h *accountHandler) CreateAccount(c *gin.Context) {
 	requestHandler(c, acc, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		acc := v.(*module.Account)
 		return module.CreateAccount(c, db, *acc)
+	}, func(c *gin.Context, err error) {
+
 	})
 }
 
@@ -57,6 +59,10 @@ func (h *accountHandler) UpdateAccountInfo(c *gin.Context) {
 	requestHandler(c, acc, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		acc := v.(*module.Account)
 		return module.UpdateAccountInfo(c, db, *acc)
+	}, func(c *gin.Context, err error) {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, nil)
+		}
 	})
 }
 
@@ -66,6 +72,10 @@ func (h *accountHandler) DeleteAccount(c *gin.Context) {
 	requestHandler(c, acc, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		acc := v.(*module.Account)
 		return module.DeleteAccount(c, db, *acc)
+	}, func(c *gin.Context, err error) {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, nil)
+		}
 	})
 }
 

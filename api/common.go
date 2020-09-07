@@ -33,6 +33,8 @@ type email struct {
 
 type reqAction func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error
 
+type errHandler func(c *gin.Context, err error)
+
 func httpErrHandler(c *gin.Context, err error) {
 	// errors from pgx driver
 	var pgErr *pgconn.PgError
@@ -57,7 +59,7 @@ func httpErrHandler(c *gin.Context, err error) {
 	})
 }
 
-func requestHandler(c *gin.Context, v interface{}, handle reqAction) {
+func requestHandler(c *gin.Context, v interface{}, handle reqAction, errHandle errHandler) {
 	if err := c.BindJSON(v); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),
@@ -69,7 +71,7 @@ func requestHandler(c *gin.Context, v interface{}, handle reqAction) {
 	redis := middleware.RedisDB(c)
 
 	if err := handle(c, db, redis, v); err != nil {
-		httpErrHandler(c, err)
+		errHandle(c, err)
 		return
 	}
 
