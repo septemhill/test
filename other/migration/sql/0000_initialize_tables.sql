@@ -11,9 +11,9 @@ CREATE TABLE IF NOT EXISTS accounts (
 
 CREATE TABLE IF NOT EXISTS accounts_private (
 	id BIGSERIAL NOT NULL PRIMARY KEY,
-	username VARCHAR(30) NOT NULL,
+	email VARCHAR(50) NOT NULL,
 	password VARCHAR(255) NOT NULL,
-	CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES accounts(username)
+	CONSTRAINT fk_email FOREIGN KEY (email) REFERENCES accounts(email)
 );
 
 CREATE TABLE IF NOT EXISTS articles (

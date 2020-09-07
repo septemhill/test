@@ -26,8 +26,8 @@ func CreateAccount(ctx context.Context, db *db.DB, acc Account) (err error) {
 			return dbErrHandler(err)
 		}
 
-		if _, err := tx.ExecContext(ctx, accpriExpr, acc.Username, acc.Password); err != nil {
-			return dbErrHandler(err)
+		if _, err := tx.ExecContext(ctx, accpriExpr, acc.Email, acc.Password); err != nil {
+			return err
 		}
 
 		return nil
@@ -38,10 +38,8 @@ func GetAccountInfo(ctx context.Context, db *db.DB, acc *Account) error {
 	expr := `SELECT email, phone FROM accounts WHERE username = $1`
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
-		row := tx.QueryRowxContext(ctx, expr, acc.Username)
-
-		if err := row.StructScan(acc); err != nil {
-			return dbErrHandler(err)
+		if err := tx.GetContext(ctx, acc, expr, acc.Username); err != nil {
+			return err
 		}
 
 		return nil

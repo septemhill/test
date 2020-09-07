@@ -66,50 +66,30 @@ func GetPosts(ctx context.Context, db *db.DB, size, offset int, asc bool) ([]Art
 		expr = fmt.Sprintf(expr, "ASC")
 	}
 
-	tx, err := db.BeginTxx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Commit()
-
-	rows, err := tx.QueryxContext(ctx, expr, size, offset)
-	if err != nil {
-		return nil, err
-	}
-
-	arts := make([]Article, 0)
-
-	for rows.Next() {
-		art := Article{}
-		if err := rows.StructScan(&art); err != nil {
-			return nil, err
+	arts := []Article{}
+	err := txAction(ctx, db, func(tx *sqlx.Tx) error {
+		if err := tx.SelectContext(ctx, &arts, expr, size, offset); err != nil {
+			return err
 		}
+		return nil
+	})
 
-		arts = append(arts, art)
-	}
-
-	return arts, nil
+	return arts, err
 }
 
 func GetPost(ctx context.Context, db *db.DB, postID int) (*Article, error) {
 	expr := `SELECT * FROM articles WHERE id = $1`
 
-	tx, err := db.BeginTxx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	row := tx.QueryRowxContext(ctx, expr, postID)
-	if row.Err() != nil {
-		tx.Rollback()
-		return nil, row.Err()
-	}
-
 	art := new(Article)
-	if err := row.StructScan(art); err != nil {
+
+	if err := txAction(ctx, db, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, art, expr, postID); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
 		return nil, err
 	}
-	tx.Commit()
 
 	comments, err := GetComments(ctx, db, postID, 10, 0)
 	if err != nil {
@@ -146,28 +126,16 @@ func UpdateComment(ctx context.Context, db *db.DB, comment Comment) error {
 func GetComments(ctx context.Context, db *db.DB, postID, size, offset int) ([]Comment, error) {
 	expr := `SELECT * FROM comments WHERE art_id = $1 ORDER BY create_at ASC LIMIT $2 OFFSET $3`
 
-	tx, err := db.BeginTxx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Commit()
+	comments := []Comment{}
 
-	comments := make([]Comment, 0)
-
-	rows, err := tx.QueryxContext(ctx, expr, postID, size, offset)
-	if err != nil {
-		return nil, err
-	}
-
-	for rows.Next() {
-		comment := Comment{}
-		if err := rows.StructScan(&comment); err != nil {
-			return nil, err
+	err := txAction(ctx, db, func(tx *sqlx.Tx) error {
+		if err := tx.SelectContext(ctx, &comments, expr, postID, size, offset); err != nil {
+			return err
 		}
-		comments = append(comments, comment)
-	}
+		return nil
+	})
 
-	return comments, nil
+	return comments, err
 }
 
 func DeleteComment(ctx context.Context, db *db.DB, comment Comment) error {

@@ -14,10 +14,18 @@ import (
 	"github.com/septemhill/test/errors"
 )
 
+type password struct {
+	Password string `json:"new_password"`
+}
+
 type paginator struct {
 	Size   int  `form:"size"`
 	Offset int  `form:"offset"`
 	Ascend bool `form:"asc"`
+}
+
+type email struct {
+	Email string `json:"email"`
 }
 
 type reqAction func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error
@@ -29,8 +37,8 @@ func httpErrHandler(c *gin.Context, err errors.HttpError) {
 }
 
 func requestHandler(c *gin.Context, v interface{}, handle reqAction) {
-	if err := c.ShouldBindJSON(v); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+	if err := c.BindJSON(v); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),
 		})
 		return

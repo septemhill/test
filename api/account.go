@@ -63,6 +63,16 @@ func (h *accountHandler) DeleteAccount(c *gin.Context) {
 	})
 }
 
+func (h *accountHandler) ChangePassword(c *gin.Context) {
+	pass := password{}
+	if err := c.BindJSON(&pass); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+}
+
 func AccountService(r gin.IRouter) gin.IRouter {
 	handler := accountHandler{}
 	account := r.Group("/account")
@@ -72,6 +82,7 @@ func AccountService(r gin.IRouter) gin.IRouter {
 	account.PUT("/", handler.UpdateAccountInfo)
 	account.GET("/:user", handler.GetAccountInfo)
 	account.DELETE("/", handler.DeleteAccount)
+	account.PUT("/password", handler.ChangePassword)
 
 	return r
 }

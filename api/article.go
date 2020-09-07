@@ -62,7 +62,7 @@ func (h *articleHandler) GetPosts(c *gin.Context) {
 
 func (h *articleHandler) GetPost(c *gin.Context) {
 	art := module.Article{}
-	if err := c.ShouldBindUri(&art); err != nil {
+	if err := c.BindUri(&art); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),
 		})
@@ -83,7 +83,7 @@ func (h *articleHandler) GetPost(c *gin.Context) {
 
 func (h *articleHandler) NewComment(c *gin.Context) {
 	comment := new(module.Comment)
-	if err := c.ShouldBindUri(comment); err != nil {
+	if err := c.BindUri(comment); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),
 		})
