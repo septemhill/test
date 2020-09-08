@@ -54,7 +54,7 @@ jobs:
       - name: Run Postgres Migration
         run: |
           cd migration
-          /snap/bin/libquibase update
+          which libquibase
 
       - name: Build
         run: go build -v .
