@@ -49,7 +49,12 @@ jobs:
         run: |
           sudo mkdir -p /usr/local/opt/liquibase/lib/
           cd /usr/local/opt/liquibase/lib/
-          wget https://jdbc.postgresql.org/download/postgresql-42.2.16.jar
+          sudo wget https://jdbc.postgresql.org/download/postgresql-42.2.16.jar
+
+      - name: Run Postgres Migration
+        run: |
+          cd migration
+          libquibase update
 
       - name: Build
         run: go build -v .
