@@ -44,6 +44,11 @@ jobs:
       - name: Build
         run: go build -v .
 
+      - name: Setup PostgreSQL With Init Scripts
+        uses: m4nu56/postgresql-action@1.0
+        with:
+          postgresql init scripts: migration/sql
+
       - name: Test
         run: go test -v ./...
         env:
