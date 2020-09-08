@@ -37,7 +37,7 @@ jobs:
         uses: m4nu56/postgresql-action@1.0
         with:
           postgresql version: "13"
-          postgresql init scripts: migration/sql
+          postgresql init scripts: "migration/sql"
 
       - name: Get dependencies
         run: |
