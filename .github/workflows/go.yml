@@ -36,6 +36,7 @@ jobs:
       - name: Setup PostgreSQL With Init Scripts
         uses: m4nu56/postgresql-action@1.0
         with:
+          postgresql version: "13"
           postgresql init scripts: migration/sql
 
       - name: Get dependencies
