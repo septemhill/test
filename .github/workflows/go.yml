@@ -54,7 +54,7 @@ jobs:
       - name: Run Postgres Migration
         run: |
           cd migration/
-          echo $(which libquibase)
+          libquibase
 
       - name: Build
         run: go build -v .
