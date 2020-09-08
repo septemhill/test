@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
+	"github.com/jackc/pgx"
 	"github.com/septemhill/test/db"
 	"github.com/septemhill/test/middleware"
 	"github.com/septemhill/test/module"
@@ -22,7 +23,19 @@ func (h *accountHandler) CreateAccount(c *gin.Context) {
 		acc := v.(*module.Account)
 		return module.CreateAccount(c, db, *acc)
 	}, func(c *gin.Context, err error) {
-
+		var pgerr pgx.PgError
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+		if errors.As(err, &pgerr) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": pgerr.Code + ":" + pgerr.Error(),
+			})
+			return
+		}
 	})
 }
 
@@ -96,10 +109,10 @@ func AccountService(r gin.IRouter) gin.IRouter {
 	account.Use(middleware.ValidateSessionToken)
 
 	account.POST("/", handler.CreateAccount)
-	account.PUT("/", handler.UpdateAccountInfo)
+	account.PUT("/:user", handler.UpdateAccountInfo)
 	account.GET("/:user", handler.GetAccountInfo)
-	account.DELETE("/", handler.DeleteAccount)
-	account.PUT("/password", handler.ChangePassword)
+	account.DELETE("/:user", handler.DeleteAccount)
+	account.PUT("/:user/chgpasswd", handler.ChangePassword)
 
 	return r
 }

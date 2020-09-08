@@ -149,7 +149,7 @@ func TestDeleteAccount(t *testing.T) {
 			b, err := json.Marshal(&test.Account)
 			assert.NoError(err)
 
-			req, err := http.NewRequest("DELETE", ts.URL+"/account", bytes.NewBuffer(b))
+			req, err := http.NewRequest("DELETE", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b))
 			assert.NoError(err)
 
 			rsp, err := http.DefaultClient.Do(req)
@@ -209,7 +209,7 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 			Account: module.Account{
 				Username: "user0004",
 			},
-			UpdateStatusCode: http.StatusOK,
+			UpdateStatusCode: http.StatusNotFound,
 			GetStatusCode:    http.StatusNotFound,
 		},
 	}
@@ -219,7 +219,7 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 			b, err := json.Marshal(&test.Account)
 			assert.NoError(err)
 
-			ureq, err := http.NewRequest("PUT", ts.URL+"/account/", bytes.NewBuffer(b))
+			ureq, err := http.NewRequest("PUT", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b))
 			assert.NoError(err)
 
 			ursp, err := http.DefaultClient.Do(ureq)
