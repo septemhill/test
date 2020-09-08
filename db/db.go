@@ -1,6 +1,9 @@
 package db
 
 import (
+	"fmt"
+	"os"
+
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 )
@@ -16,7 +19,7 @@ func Connect() *DB {
 }
 
 func ConnectToTest() *DB {
-	connInfo := `user=septemlee dbname=runtests sslmode=disable`
+	connInfo := fmt.Sprintf(`password=%s`, os.Getenv("POSTGRES_PASSWORD"))
 	db := sqlx.MustConnect("pgx", connInfo)
 	return &DB{DB: db}
 }
