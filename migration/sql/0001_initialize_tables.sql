@@ -1,7 +1,7 @@
 --liquibase formatted sql
 
 --comment: Initialize tables 
---changeset Septem: 0001_initialize_tables
+--changeset Septem:0001_initialize_tables
 CREATE TABLE IF NOT EXISTS accounts (
 	id BIGSERIAL NOT NULL PRIMARY KEY,
 	username VARCHAR(30) NOT NULL UNIQUE,
