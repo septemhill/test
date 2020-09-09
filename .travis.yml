@@ -7,7 +7,7 @@ before_install:
   - docker pull postgres:13
   - docker pull septemhill/liquibase:latest
   - docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
-  - docker run --net=host -v /home/runner/work/test/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
+  #- docker run --net=host -v /home/runner/work/test/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
 
 sudo: true
 
@@ -19,7 +19,14 @@ go:
   - "1.15.1"
   - master
 
-script: go test $(gobuild_args) ./...
-
 notifications:
   slack: obsamworkspace:CkAsaDCf4HavBESkjLhHw33W
+
+jobs:
+  include:
+    - stage: Show me current path now
+      script: echo $(PWD)
+    - stage: Build project
+      script: go build -v
+    - stage: Run test cases
+      script: go test $(gobuild_args) ./...
