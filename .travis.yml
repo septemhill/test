@@ -4,7 +4,7 @@ services:
   - docker
 
 before_install:
-  - echo $(PWD)
+  - echo $PWD
   - docker pull postgres:13
   - docker pull septemhill/liquibase:latest
   - docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
