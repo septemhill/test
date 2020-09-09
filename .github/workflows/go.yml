@@ -43,21 +43,7 @@ jobs:
 
       - name: Run database migration
         run: |
-          docker run -v migration:/liquibase/changelog septemhill/liquibase --url="jdbc:postgresql://localhost:5432/postgres" --changeLogFile=/liquibase/changelog/dbchangelog.xml --username=postgres --password=postgres update
-      #- name: Install libquibase
-      #  run: |
-      #    sudo snap install liquibase
-      #
-      #- name: Install Postgres JDBC Driver
-      #  run: |
-      #    sudo mkdir -p /usr/local/opt/liquibase/lib/
-      #    cd /usr/local/opt/liquibase/lib/
-      #    sudo wget https://jdbc.postgresql.org/download/postgresql-42.2.14.jar
-      #
-      #- name: Run Postgres Migration
-      #  run: |
-      #    cd migration/
-      #    libquibase
+          docker run -v migration:/liquibase/changelog septemhill/liquibase --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=/liquibase/changelog/dbchangelog.xml --username=postgres --password=postgres update
 
       - name: Build
         run: go build -v .
