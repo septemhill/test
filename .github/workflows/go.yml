@@ -43,7 +43,7 @@ jobs:
 
       - name: Run database migration
         run: |
-          docker run -v migration:/liquibase/changelog septemhill/liquibase --driver=org.postgresql.Driver --url=”jdbc:postgresql://localhost:5432/postgres” --changeLogFile=/liquibase/changelog/dbchangelog.xml --username=postgres --password=postgres
+          docker run -v migration:/liquibase/changelog septemhill/liquibase --driver=org.postgresql.Driver --url=”jdbc:postgresql://localhost:5432/postgres” --changeLogFile=/liquibase/changelog/dbchangelog.xml --username=postgres --password=postgres update
       #- name: Install libquibase
       #  run: |
       #    sudo snap install liquibase
