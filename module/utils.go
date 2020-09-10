@@ -7,15 +7,15 @@ import (
 	"github.com/septemhill/test/db"
 )
 
-func txAction(ctx context.Context, db *db.DB, txFunc func(*sqlx.Tx) error) (err error) {
-	tx, err := db.BeginTxx(ctx, nil)
+func txAction(ctx context.Context, d *db.DB, txFunc func(*sqlx.Tx) error) (err error) {
+	tx, err := d.BeginTxx(ctx, nil)
 	if err != nil {
 		return
 	}
 
 	defer func() {
 		if err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return
 		}
 		err = tx.Commit()

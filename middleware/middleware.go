@@ -44,7 +44,7 @@ func SetLogger(logger *logrus.Logger) gin.HandlerFunc {
 	}
 }
 
-func SetPostgreSqlDB() gin.HandlerFunc {
+func SetPostgresDB() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		d := db.Connect()
 		c.Set(module.RESOURCE_RDB, d)
@@ -53,7 +53,7 @@ func SetPostgreSqlDB() gin.HandlerFunc {
 	}
 }
 
-func SetTestPostgreSqlDB() gin.HandlerFunc {
+func SetTestPostgresDB() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		d := db.ConnectToTest()
 		c.Set(module.RESOURCE_RDB, d)

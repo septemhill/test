@@ -48,6 +48,10 @@ jobs:
       - name: Build
         run: go build -v .
 
+      - name: Linter check
+        run: |
+          docker run -v /home/runner/work/test/test:/app -w /app golangci/golangci-lint golangci-lint run
+
       - name: Test
         run: go test -v ./...
         env:

@@ -6,6 +6,7 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/gin-gonic/gin"
+	_ "github.com/jackc/pgx/stdlib"
 	"github.com/septemhill/test/api"
 	"github.com/septemhill/test/middleware"
 	"github.com/septemhill/test/utils"
@@ -38,7 +39,7 @@ func serviceInit() {
 	router := gin.Default()
 
 	router.Use(middleware.SetLogger(NewLogger()))
-	router.Use(middleware.SetPostgreSqlDB())
+	router.Use(middleware.SetPostgresDB())
 	router.Use(middleware.SetRedisDB())
 	router.Use(middleware.SetMailer(NewMailer()))
 
@@ -49,7 +50,7 @@ func serviceInit() {
 		return
 	}
 
-	router.Run(":" + os.Args[1])
+	_ = router.Run(":" + os.Args[1])
 }
 
 func main() {

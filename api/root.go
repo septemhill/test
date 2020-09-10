@@ -48,7 +48,6 @@ func (h *rootHandler) Logout(c *gin.Context) {
 }
 
 func (h *rootHandler) Signup(c *gin.Context) {
-
 	c.JSON(http.StatusOK, nil)
 }
 
