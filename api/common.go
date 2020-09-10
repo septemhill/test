@@ -41,10 +41,10 @@ func requestHandler(c *gin.Context, v interface{}, handle reqAction, errHandle e
 		return
 	}
 
-	db := middleware.PostgresDB(c)
-	redis := middleware.RedisDB(c)
+	d := middleware.PostgresDB(c)
+	r := middleware.RedisDB(c)
 
-	if err := handle(c, db, redis, v); err != nil {
+	if err := handle(c, d, r, v); err != nil {
 		errHandle(c, err)
 		return
 	}

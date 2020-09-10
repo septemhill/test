@@ -24,7 +24,7 @@ func TestCreateAccount(t *testing.T) {
 		r.Close()
 	}()
 
-	assert := assert.New(t)
+	asserts := assert.New(t)
 
 	tests := []struct {
 		Description string
@@ -82,13 +82,13 @@ func TestCreateAccount(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.Description, func(t *testing.T) {
 			b, err := json.Marshal(&test.Account)
-			assert.NoError(err)
+			asserts.NoError(err)
 
 			rsp, err := http.Post(ts.URL+"/account", "application/json", bytes.NewBuffer(b))
-			assert.NoError(err)
+			asserts.NoError(err)
 			defer rsp.Body.Close()
 
-			assert.Equal(test.StatusCode, rsp.StatusCode)
+			asserts.Equal(test.StatusCode, rsp.StatusCode)
 		})
 	}
 }
@@ -101,7 +101,7 @@ func TestDeleteAccount(t *testing.T) {
 		r.Close()
 	}()
 
-	assert := assert.New(t)
+	asserts := assert.New(t)
 
 	users := []module.Account{
 		{
@@ -148,16 +148,16 @@ func TestDeleteAccount(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.Description, func(t *testing.T) {
 			b, err := json.Marshal(&test.Account)
-			assert.NoError(err)
+			asserts.NoError(err)
 
 			req, err := http.NewRequest("DELETE", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b))
-			assert.NoError(err)
+			asserts.NoError(err)
 
 			rsp, err := http.DefaultClient.Do(req)
-			assert.NoError(err)
+			asserts.NoError(err)
 			defer rsp.Body.Close()
 
-			assert.Equal(test.StatusCode, rsp.StatusCode)
+			asserts.Equal(test.StatusCode, rsp.StatusCode)
 		})
 	}
 }
@@ -170,7 +170,7 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 		r.Close()
 	}()
 
-	assert := assert.New(t)
+	asserts := assert.New(t)
 
 	users := []module.Account{
 		{
@@ -218,25 +218,25 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.Description, func(t *testing.T) {
 			b, err := json.Marshal(&test.Account)
-			assert.NoError(err)
+			asserts.NoError(err)
 
 			ureq, err := http.NewRequest("PUT", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b))
-			assert.NoError(err)
+			asserts.NoError(err)
 
 			ursp, err := http.DefaultClient.Do(ureq)
-			assert.NoError(err)
+			asserts.NoError(err)
 			defer ursp.Body.Close()
 
-			assert.Equal(test.UpdateStatusCode, ursp.StatusCode)
+			asserts.Equal(test.UpdateStatusCode, ursp.StatusCode)
 
 			greq, err := http.NewRequest("GET", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b))
-			assert.NoError(err)
+			asserts.NoError(err)
 
 			grsp, err := http.DefaultClient.Do(greq)
-			assert.NoError(err)
+			asserts.NoError(err)
 			defer grsp.Body.Close()
 
-			assert.Equal(test.GetStatusCode, grsp.StatusCode)
+			asserts.Equal(test.GetStatusCode, grsp.StatusCode)
 
 			if test.GetStatusCode == http.StatusNotFound {
 				return
@@ -244,12 +244,12 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 
 			acc := module.Account{}
 			body, err := ioutil.ReadAll(grsp.Body)
-			assert.NoError(err)
+			asserts.NoError(err)
 
 			err = json.Unmarshal(body, &acc)
-			assert.NoError(err)
+			asserts.NoError(err)
 
-			assert.Equal(test.Account, acc)
+			asserts.Equal(test.Account, acc)
 		})
 	}
 }

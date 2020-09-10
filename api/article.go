@@ -55,8 +55,8 @@ func (h *articleHandler) GetPosts(c *gin.Context) {
 		return
 	}
 
-	db := middleware.PostgresDB(c)
-	arts, err := module.GetPosts(c, db, pi.Size, pi.Offset, pi.Ascend)
+	d := middleware.PostgresDB(c)
+	arts, err := module.GetPosts(c, d, pi.Size, pi.Offset, pi.Ascend)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"errMessage": err.Error(),
@@ -76,8 +76,8 @@ func (h *articleHandler) GetPost(c *gin.Context) {
 		return
 	}
 
-	db := middleware.PostgresDB(c)
-	arti, err := module.GetPost(c, db, art.ID)
+	d := middleware.PostgresDB(c)
+	arti, err := module.GetPost(c, d, art.ID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),

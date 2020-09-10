@@ -36,7 +36,7 @@ func NewTestDB() (*db.DB, *redis.Client) {
 	return NewTestPostgresDB(), NewTestRedisDB()
 }
 
-func NewAccount(ctx context.Context, db *db.DB) *module.Account {
+func NewAccount(ctx context.Context, d *db.DB) *module.Account {
 	name := utils.GenerateRandomString(utils.RANDOM_ALL, 7)
 	pass := utils.GenerateRandomString(utils.RANDOM_ALL, 12)
 	phone := utils.GenerateRandomString(utils.RANDOM_DIGIT_ONLY, 10)
@@ -48,13 +48,13 @@ func NewAccount(ctx context.Context, db *db.DB) *module.Account {
 		Phone:    null.StringFrom(phone),
 	}
 
-	_ = module.CreateAccount(ctx, db, *acc)
+	_ = module.CreateAccount(ctx, d, *acc)
 
 	return acc
 }
 
-func DeleteAccounts(ctx context.Context, db *db.DB, accs ...*module.Account) {
+func DeleteAccounts(ctx context.Context, d *db.DB, accs ...*module.Account) {
 	for _, acc := range accs {
-		_ = module.DeleteAccount(ctx, db, *acc)
+		_ = module.DeleteAccount(ctx, d, *acc)
 	}
 }

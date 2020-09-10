@@ -51,8 +51,8 @@ func (h *accountHandler) GetAccountInfo(c *gin.Context) {
 	var acc module.Account
 	acc.Username = username
 
-	db := middleware.PostgresDB(c)
-	if err := module.GetAccountInfo(c, db, &acc); err != nil {
+	d := middleware.PostgresDB(c)
+	if err := module.GetAccountInfo(c, d, &acc); err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, nil)
 			return

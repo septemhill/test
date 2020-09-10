@@ -109,6 +109,7 @@ linters:
     - dogsled
     #- dupl
     - errcheck
+    - exportloopref
     - exhaustive
     - funlen
     - gochecknoinits
@@ -120,7 +121,7 @@ linters:
     #- golint
     - gomnd
     - goprintffuncname
-    - gosec
+    #- gosec
     - gosimple
     - govet
     - ineffassign
@@ -128,13 +129,13 @@ linters:
     - lll
     - misspell
     - nakedret
-    - noctx
+    #- noctx
     - nolintlint
     - rowserrcheck
     #- scopelint
     - staticcheck
     - structcheck
-    - stylecheck
+    #- stylecheck
     - typecheck
     - unconvert
     - unparam
