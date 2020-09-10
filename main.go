@@ -50,7 +50,7 @@ func serviceInit() {
 		return
 	}
 
-	router.Run(":" + os.Args[1])
+	_ = router.Run(":" + os.Args[1])
 }
 
 func main() {

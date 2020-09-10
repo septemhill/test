@@ -121,7 +121,7 @@ func ArticleService(r gin.IRouter) gin.IRouter {
 	handler := articleHandler{}
 	article := r.Group("/article")
 
-	//article.Use(validateSessionToken)
+	article.Use(middleware.ValidateSessionToken)
 
 	article.POST("/", handler.NewPost)
 	article.PUT("/", handler.EditPost)

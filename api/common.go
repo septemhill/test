@@ -6,12 +6,10 @@ import (
 	"crypto/sha512"
 	"encoding/gob"
 	"encoding/hex"
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
-	"github.com/jackc/pgconn"
 	"github.com/septemhill/test/db"
 	"github.com/septemhill/test/middleware"
 	"github.com/septemhill/test/utils"
@@ -34,30 +32,6 @@ type email struct {
 type reqAction func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error
 
 type errHandler func(c *gin.Context, err error)
-
-func httpErrHandler(c *gin.Context, err error) {
-	// errors from pgx driver
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": pgErr.Code + ":" + pgErr.Error(),
-		})
-		return
-	}
-
-	//TODO: Each CRUD need to handle itself if get sql.ErrNoRows issue
-	//	if err == sql.ErrNoRows {
-	//		c.JSON(http.StatusOK, gin.H{
-	//			"message": "successful",
-	//		})
-	//		return
-	//	}
-
-	// Unknown error type
-	c.JSON(http.StatusInternalServerError, gin.H{
-		"errMessage": err.Error(),
-	})
-}
 
 func requestHandler(c *gin.Context, v interface{}, handle reqAction, errHandle errHandler) {
 	if err := c.BindJSON(v); err != nil {

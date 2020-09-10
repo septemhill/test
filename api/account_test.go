@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/jackc/pgx/stdlib"
 	"github.com/septemhill/test/module"
 	test "github.com/septemhill/test/testing"
 	"github.com/stretchr/testify/assert"
