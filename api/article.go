@@ -18,7 +18,7 @@ func (h *articleHandler) NewPost(c *gin.Context) {
 
 	requestHandler(c, art, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		art := v.(*module.Article)
-		return module.NewPost(c, db, *art)
+		return module.NewPost(c, db, art)
 	}, func(c *gin.Context, err error) {
 
 	})
@@ -29,7 +29,7 @@ func (h *articleHandler) EditPost(c *gin.Context) {
 
 	requestHandler(c, art, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		art := v.(*module.Article)
-		return module.EditPost(c, db, *art)
+		return module.EditPost(c, db, art)
 	}, func(c *gin.Context, err error) {
 
 	})
@@ -40,7 +40,7 @@ func (h *articleHandler) DeletePost(c *gin.Context) {
 
 	requestHandler(c, art, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		art := v.(*module.Article)
-		return module.DeletePost(c, db, *art)
+		return module.DeletePost(c, db, art)
 	}, func(c *gin.Context, err error) {
 
 	})
@@ -99,7 +99,7 @@ func (h *articleHandler) NewComment(c *gin.Context) {
 
 	requestHandler(c, comment, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
 		comment := v.(*module.Comment)
-		return module.NewComment(c, db, comment.ArticleID, *comment)
+		return module.NewComment(c, db, comment.ArticleID, comment)
 	}, func(c *gin.Context, err error) {
 
 	})

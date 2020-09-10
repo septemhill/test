@@ -14,7 +14,7 @@ import (
 )
 
 func NewTestRouter(r *gin.Engine, apis ...utils.ServiceAPI) *httptest.Server {
-	r.Use(middleware.SetTestPostgreSqlDB())
+	r.Use(middleware.SetTestPostgresDB())
 	r.Use(middleware.SetRedisDB())
 
 	for _, api := range apis {

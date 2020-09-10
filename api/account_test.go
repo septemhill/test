@@ -73,7 +73,7 @@ func TestCreateAccount(t *testing.T) {
 	defer func() {
 		for _, test := range tests {
 			if test.Clean {
-				module.DeleteAccount(context.Background(), d, test.Account)
+				_ = module.DeleteAccount(context.Background(), d, test.Account)
 			}
 		}
 	}()
@@ -112,7 +112,7 @@ func TestDeleteAccount(t *testing.T) {
 	}
 
 	for _, user := range users {
-		module.CreateAccount(context.Background(), d, user)
+		_ = module.CreateAccount(context.Background(), d, user)
 	}
 
 	tests := []struct {
@@ -180,12 +180,12 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 	}
 
 	for _, user := range users {
-		module.CreateAccount(context.Background(), d, user)
+		_ = module.CreateAccount(context.Background(), d, user)
 	}
 
 	defer func() {
 		for _, user := range users {
-			module.DeleteAccount(context.Background(), d, user)
+			_ = module.DeleteAccount(context.Background(), d, user)
 		}
 	}()
 

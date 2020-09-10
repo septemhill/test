@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 )
 

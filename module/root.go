@@ -72,15 +72,21 @@ func VerifyUserRegistration(ctx context.Context, db *db.DB, redis *redis.Client,
 	}
 
 	if email == "" {
-		return errors.New("This link already expired")
+		return errors.New("link already expired")
 	}
 
-	insAccount := `INSERT INTO accounts SELECT nextval('accounts_id_seq'), username, email, phone FROM non_verified_accounts WHERE username = $1`
-	insAccountPrivate := `INSERT INTO accounts_private SELECT nexeval('accounts_private_id_seq'), email, password FROM non_verified_accounts WHERE email = $1`
-	delNonVerify := `DELETE FROM non_verified_accounts WHERE username = $1`
+	insAccount := `
+		INSERT INTO accounts SELECT nextval('accounts_id_seq'), username, email, phone FROM non_verified_accounts WHERE username = $1
+	`
+	insAccountPrivate := `
+		INSERT INTO accounts_private SELECT nexeval('accounts_private_id_seq'), email, password FROM non_verified_accounts WHERE email = $1
+	`
+	delNonVerify := `
+		DELETE FROM non_verified_accounts WHERE username = $1
+	`
 
 	// TODO: postgres and redis should be in an atomic operation
-	if err = txAction(ctx, db, func(tx *sqlx.Tx) error {
+	if err := txAction(ctx, db, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, insAccount, email); err != nil {
 			return err
 		}
@@ -140,7 +146,7 @@ func ResetPassword(ctx context.Context, db *db.DB, redis *redis.Client, code, pa
 	}
 
 	if email == "" {
-		return errors.New("This link already expired")
+		return errors.New("link already expired")
 	}
 
 	return txAction(ctx, db, func(tx *sqlx.Tx) error {
