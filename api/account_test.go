@@ -12,7 +12,6 @@ import (
 	"github.com/septemhill/test/module"
 	test "github.com/septemhill/test/testing"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/guregu/null.v4"
 )
 
 func TestCreateAccount(t *testing.T) {
@@ -93,6 +92,7 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestDeleteAccount(t *testing.T) {
+	ctx := context.Background()
 	ts := test.NewTestRouter(gin.Default(), AccountService)
 	d, r := test.NewTestDB()
 	defer func() {
@@ -102,18 +102,7 @@ func TestDeleteAccount(t *testing.T) {
 
 	assert := assert.New(t)
 
-	users := []module.Account{
-		{
-			Username: "user0001",
-			Password: "user0001",
-			Email:    "user0001@gmail.com",
-			Phone:    null.StringFrom("12345"),
-		},
-	}
-
-	for _, user := range users {
-		module.CreateAccount(context.Background(), d, user)
-	}
+	user1 := test.NewAccount(ctx, d)
 
 	tests := []struct {
 		Description string
@@ -123,8 +112,8 @@ func TestDeleteAccount(t *testing.T) {
 		{
 			Description: "Delete matched username and email pair",
 			Account: module.Account{
-				Username: "user0001",
-				Email:    "user0001@gmail.com",
+				Username: user1.Username,
+				Email:    user1.Email,
 			},
 			StatusCode: http.StatusOK,
 		}, {
@@ -162,6 +151,7 @@ func TestDeleteAccount(t *testing.T) {
 }
 
 func TestUpdateAndGetAccountInfo(t *testing.T) {
+	ctx := context.Background()
 	ts := test.NewTestRouter(gin.Default(), AccountService)
 	d, r := test.NewTestDB()
 	defer func() {
@@ -171,22 +161,10 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 
 	assert := assert.New(t)
 
-	users := []module.Account{
-		{
-			Username: "user0001",
-			Email:    "user0001@gmail.com",
-			Phone:    null.StringFrom("0912345678"),
-		},
-	}
-
-	for _, user := range users {
-		module.CreateAccount(context.Background(), d, user)
-	}
+	users := []*module.Account{test.NewAccount(ctx, d)}
 
 	defer func() {
-		for _, user := range users {
-			module.DeleteAccount(context.Background(), d, user)
-		}
+		test.DeleteAccounts(ctx, d, users...)
 	}()
 
 	tests := []struct {
@@ -198,9 +176,9 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 		{
 			Description: "Update exised account information and get it back to verify",
 			Account: module.Account{
-				Username: "user0001",
-				Email:    "user0001@gmail.com",
-				Phone:    null.StringFrom("0909111222"),
+				Username: users[0].Username,
+				Email:    users[0].Email,
+				Phone:    users[0].Phone,
 			},
 			UpdateStatusCode: http.StatusOK,
 			GetStatusCode:    http.StatusOK,
