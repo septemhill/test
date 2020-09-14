@@ -14,6 +14,7 @@ require (
 	github.com/lib/pq v1.8.0
 	github.com/nishanths/exhaustive v0.0.0-20200811152831-6cf413ae40e0 // indirect
 	github.com/prometheus/common v0.12.0
+	github.com/sethvargo/go-diceware v0.2.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.5.1
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

@@ -68,8 +68,8 @@ func (h *articleHandler) GetPosts(c *gin.Context) {
 }
 
 func (h *articleHandler) GetPost(c *gin.Context) {
-	art := module.Article{}
-	if err := c.BindUri(&art); err != nil {
+	art := new(module.Article)
+	if err := c.BindUri(art); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),
 		})
@@ -106,15 +106,66 @@ func (h *articleHandler) NewComment(c *gin.Context) {
 }
 
 func (h *articleHandler) UpdateComment(c *gin.Context) {
-	c.JSON(http.StatusOK, nil)
+	comment := new(module.Comment)
+	if err := c.BindUri(comment); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	requestHandler(c, comment, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
+		comment := v.(*module.Comment)
+		return module.UpdateComment(ctx, db, comment)
+	}, func(c *gin.Context, err error) {
+
+	})
 }
 
 func (h *articleHandler) GetComments(c *gin.Context) {
-	c.JSON(http.StatusOK, nil)
+	art := new(module.Article)
+	if err := c.BindUri(art); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	pi := paginator{Size: 10, Offset: 0, Ascend: false}
+	if err := c.BindQuery(&pi); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	d := middleware.PostgresDB(c)
+	comments, err := module.GetComments(c, d, art.ID, pi.Size, pi.Offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	sendResponse(c, comments)
 }
 
 func (h *articleHandler) DeleteComment(c *gin.Context) {
-	c.JSON(http.StatusOK, nil)
+	comment := new(module.Comment)
+	if err := c.BindUri(comment); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	requestHandler(c, comment, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
+		comment := v.(*module.Comment)
+		return module.DeleteComment(ctx, db, comment)
+	}, func(c *gin.Context, err error) {
+
+	})
 }
 
 func ArticleService(r gin.IRouter) gin.IRouter {
@@ -124,10 +175,10 @@ func ArticleService(r gin.IRouter) gin.IRouter {
 	article.Use(middleware.ValidateSessionToken)
 
 	article.POST("/", handler.NewPost)
-	article.PUT("/", handler.EditPost)
+	article.PUT("/:id", handler.EditPost)
 	article.GET("/", handler.GetPosts)
 	article.GET("/:id", handler.GetPost)
-	article.DELETE("/", handler.DeletePost)
+	article.DELETE("/:id", handler.DeletePost)
 
 	article.POST("/:id/comment", handler.NewComment)
 	article.GET("/:id/comment", handler.GetComments)
