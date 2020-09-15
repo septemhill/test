@@ -10,7 +10,7 @@ import (
 
 type Account struct {
 	ID       int         `db:"id"`
-	Username string      `db:"username" json:"username"`
+	Username string      `db:"username" json:"username" uri:"user"`
 	Email    string      `db:"email" json:"email"`
 	Password string      `db:"password" json:"password"`
 	Phone    null.String `db:"phone" json:"phone"`
@@ -34,16 +34,20 @@ func CreateAccount(ctx context.Context, d *db.DB, acc Account) (err error) {
 	})
 }
 
-func GetAccountInfo(ctx context.Context, d *db.DB, acc *Account) error {
+func GetAccountInfo(ctx context.Context, d *db.DB, acc *Account) (*Account, error) {
 	expr := `SELECT email, phone FROM accounts WHERE username = $1`
 
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
+	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, acc, expr, acc.Username); err != nil {
 			return err
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	return acc, nil
 }
 
 func UpdateAccountInfo(ctx context.Context, d *db.DB, acc Account) error {
