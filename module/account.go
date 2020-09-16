@@ -18,7 +18,7 @@ type Account struct {
 
 func CreateAccount(ctx context.Context, d *db.DB, acc Account) (err error) {
 	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3) RETURNING id`
-	accPriExpr := `INSERT INTO accounts_private VALUES (DEFAULT, $1, $2) RETURNING id`
+	accPriExpr := `INSERT INTO accounts_private VALUES (DEFAULT, $1, $2, 'NORMAL') RETURNING id`
 
 	return txAction(ctx, d, func(tx *sqlx.Tx) error {
 		var id int
