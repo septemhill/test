@@ -2,7 +2,7 @@
 
 glabel = "\033[92m$(1)\033[0m"
 
-all: downloadImgs runLint runTests build
+all: downloadImgs runlint runTests build
 
 downloadImgs:
 	@echo $(call glabel,"[Downloading images]")
