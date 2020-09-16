@@ -38,6 +38,7 @@ func requestHandler2(c *gin.Context, handle reqAction2, errHandle func(c *gin.Co
 	v, err := handle(c)
 	if err != nil {
 		errHandle(c, err)
+		return
 	}
 
 	if v == nil {
