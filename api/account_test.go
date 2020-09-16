@@ -222,10 +222,7 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 			asserts.NoError(err)
 			defer grsp.Body.Close()
 
-			gbody, err := ioutil.ReadAll(grsp.Body)
-			asserts.NoError(err)
-
-			asserts.Equal(test.GetStatusCode, grsp.StatusCode, string(gbody))
+			asserts.Equal(test.GetStatusCode, grsp.StatusCode)
 
 			if test.GetStatusCode == http.StatusNotFound {
 				return
