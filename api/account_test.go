@@ -88,7 +88,10 @@ func TestCreateAccount(t *testing.T) {
 			asserts.NoError(err)
 			defer rsp.Body.Close()
 
-			asserts.Equal(test.StatusCode, rsp.StatusCode)
+			body, err := ioutil.ReadAll(rsp.Body)
+			asserts.NoError(err)
+
+			asserts.Equal(test.StatusCode, rsp.StatusCode, string(body))
 		})
 	}
 }
@@ -157,7 +160,10 @@ func TestDeleteAccount(t *testing.T) {
 			asserts.NoError(err)
 			defer rsp.Body.Close()
 
-			asserts.Equal(test.StatusCode, rsp.StatusCode)
+			body, err := ioutil.ReadAll(rsp.Body)
+			asserts.NoError(err)
+
+			asserts.Equal(test.StatusCode, rsp.StatusCode, string(body))
 		})
 	}
 }
@@ -227,7 +233,10 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 			asserts.NoError(err)
 			defer ursp.Body.Close()
 
-			asserts.Equal(test.UpdateStatusCode, ursp.StatusCode)
+			ubody, err := ioutil.ReadAll(ursp.Body)
+			asserts.NoError(err)
+
+			asserts.Equal(test.UpdateStatusCode, ursp.StatusCode, string(ubody))
 
 			greq, err := http.NewRequest("GET", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b))
 			asserts.NoError(err)
@@ -236,7 +245,10 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 			asserts.NoError(err)
 			defer grsp.Body.Close()
 
-			asserts.Equal(test.GetStatusCode, grsp.StatusCode)
+			gbody, err := ioutil.ReadAll(grsp.Body)
+			asserts.NoError(err)
+
+			asserts.Equal(test.GetStatusCode, grsp.StatusCode, string(gbody))
 
 			if test.GetStatusCode == http.StatusNotFound {
 				return

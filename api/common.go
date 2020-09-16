@@ -42,7 +42,7 @@ func requestHandler2(c *gin.Context, handle reqAction2, errHandle func(c *gin.Co
 	}
 
 	if v == nil {
-		c.JSON(http.StatusOK, v)
+		c.JSON(http.StatusOK, nil)
 		return
 	}
 
