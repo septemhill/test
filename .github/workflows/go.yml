@@ -43,7 +43,7 @@ jobs:
 
       - name: Run database migration
         run: |
-          docker run --net=host -v /home/runner/work/test/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
+          docker run --net=host -v /home/runner/work/test/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5433/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
 
       - name: Build
         run: go build -v .
