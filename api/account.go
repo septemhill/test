@@ -26,8 +26,8 @@ func (h *accountHandler) CreateAccount(c *gin.Context) {
 
 	d := middleware.PostgresDB(c)
 
-	requestHandler2(c, func(ctx context.Context) (interface{}, error) {
-		return nil, module.CreateAccount(ctx, d, *acc)
+	requestHandler(c, func(ctx context.Context) (interface{}, error) {
+		return module.CreateAccount(ctx, d, *acc)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
@@ -57,7 +57,7 @@ func (h *accountHandler) GetAccountInfo(c *gin.Context) {
 
 	d := middleware.PostgresDB(c)
 
-	requestHandler2(c, func(ctx context.Context) (interface{}, error) {
+	requestHandler(c, func(ctx context.Context) (interface{}, error) {
 		return module.GetAccountInfo(ctx, d, acc)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
@@ -97,8 +97,8 @@ func (h *accountHandler) UpdateAccountInfo(c *gin.Context) {
 
 	d := middleware.PostgresDB(c)
 
-	requestHandler2(c, func(ctx context.Context) (interface{}, error) {
-		return nil, module.UpdateAccountInfo(ctx, d, *acc)
+	requestHandler(c, func(ctx context.Context) (interface{}, error) {
+		return module.UpdateAccountInfo(ctx, d, *acc)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
@@ -138,8 +138,8 @@ func (h *accountHandler) DeleteAccount(c *gin.Context) {
 
 	d := middleware.PostgresDB(c)
 
-	requestHandler2(c, func(ctx context.Context) (interface{}, error) {
-		return nil, module.DeleteAccount(ctx, d, *acc)
+	requestHandler(c, func(ctx context.Context) (interface{}, error) {
+		return module.DeleteAccount(ctx, d, *acc)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {

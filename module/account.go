@@ -16,12 +16,12 @@ type Account struct {
 	Phone    null.String `db:"phone" json:"phone"`
 }
 
-func CreateAccount(ctx context.Context, d *db.DB, acc Account) (err error) {
+func CreateAccount(ctx context.Context, d *db.DB, acc Account) (int, error) {
+	var id int
 	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3) RETURNING id`
 	accPriExpr := `INSERT INTO accounts_private VALUES (DEFAULT, $1, $2, 'NORMAL') RETURNING id`
 
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		var id int
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email, acc.Phone); err != nil {
 			return err
 		}
@@ -32,6 +32,8 @@ func CreateAccount(ctx context.Context, d *db.DB, acc Account) (err error) {
 
 		return nil
 	})
+
+	return id, err
 }
 
 func GetAccountInfo(ctx context.Context, d *db.DB, acc *Account) (*Account, error) {
@@ -50,26 +52,27 @@ func GetAccountInfo(ctx context.Context, d *db.DB, acc *Account) (*Account, erro
 	return acc, nil
 }
 
-func UpdateAccountInfo(ctx context.Context, d *db.DB, acc Account) error {
+func UpdateAccountInfo(ctx context.Context, d *db.DB, acc Account) (int, error) {
+	var id int
 	expr := `UPDATE accounts SET phone = $1 WHERE username = $2 RETURNING id`
 
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		var id int
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, acc.Phone, acc.Username); err != nil {
 			return err
 		}
 
 		return nil
 	})
+
+	return id, err
 }
 
-func DeleteAccount(ctx context.Context, d *db.DB, acc Account) error {
+func DeleteAccount(ctx context.Context, d *db.DB, acc Account) (int, error) {
+	var id int
 	accExpr := `DELETE FROM accounts WHERE username = $1 AND email = $2 RETURNING id`
 	accPriExpr := `DELETE FROM accounts_private WHERE email = $1 RETURNING id`
 
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		var id int
-
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, accPriExpr, acc.Email); err != nil {
 			return err
 		}
@@ -80,4 +83,6 @@ func DeleteAccount(ctx context.Context, d *db.DB, acc Account) error {
 
 		return nil
 	})
+
+	return id, err
 }

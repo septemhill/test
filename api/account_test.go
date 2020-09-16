@@ -74,7 +74,7 @@ func TestCreateAccount(t *testing.T) {
 	defer func() {
 		for _, test := range tests {
 			if test.Clean {
-				_ = module.DeleteAccount(context.Background(), d, test.Account)
+				_, _ = module.DeleteAccount(context.Background(), d, test.Account)
 			}
 		}
 	}()

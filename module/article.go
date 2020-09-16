@@ -28,37 +28,43 @@ type Comment struct {
 	UpdateAt  time.Time `db:"update_at" json:"updateAt"`
 }
 
-func NewPost(ctx context.Context, d *db.DB, art *Article) error {
+func NewPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
+	var id int
 	expr := `INSERT INTO articles VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING id`
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		var id int
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, art.Author, art.Title, art.Content, time.Now(), time.Now()); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }
 
-func EditPost(ctx context.Context, d *db.DB, art *Article) error {
+func EditPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
+	var id int
 	expr := `UPDATE articles SET title = $1, content = $2, update_at = $3 WHERE id = $4 RETURNING id`
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		var id int
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, time.Now(), art.ID); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }
 
-func DeletePost(ctx context.Context, d *db.DB, art *Article) error {
+func DeletePost(ctx context.Context, d *db.DB, postID int) (int, error) {
+	var id int
 	expr := `DELETE FROM articles WHERE id = $1 RETURNING id`
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		var id int
-		if err := tx.GetContext(ctx, &id, expr, art.ID); err != nil {
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, &id, expr, postID); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }
 
 func GetPosts(ctx context.Context, d *db.DB, size, offset int, asc bool) ([]Article, error) {
@@ -104,28 +110,32 @@ func GetPost(ctx context.Context, d *db.DB, postID int) (*Article, error) {
 	return art, nil
 }
 
-func NewComment(ctx context.Context, d *db.DB, postID int, comment *Comment) error {
+func NewComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
+	var id int
 	expr := `INSERT INTO comments VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING id`
 
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		var id int
-		if err := tx.GetContext(ctx, &id, expr, postID, comment.Author, comment.Content, time.Now(), time.Now()); err != nil {
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, &id, expr, comment.ArticleID, comment.Author, comment.Content, time.Now(), time.Now()); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }
 
-func UpdateComment(ctx context.Context, d *db.DB, comment *Comment) error {
+func UpdateComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
+	var id int
 	expr := `UPDATE comments SET content = $1 WHERE id = $2`
 
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		var id int
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, comment.ID); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }
 
 func GetComments(ctx context.Context, d *db.DB, postID, size, offset int) ([]Comment, error) {
@@ -143,14 +153,16 @@ func GetComments(ctx context.Context, d *db.DB, postID, size, offset int) ([]Com
 	return comments, err
 }
 
-func DeleteComment(ctx context.Context, d *db.DB, comment *Comment) error {
+func DeleteComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
+	var id int
 	expr := `DELETE FROM comments WHERE id = $1 RETURNING id`
 
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		var id int
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, comment.ID); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }

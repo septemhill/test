@@ -21,7 +21,7 @@ func NewAccount(ctx context.Context, d *db.DB, withPassword bool) *module.Accoun
 		Phone:    null.StringFrom(phone),
 	}
 
-	_ = module.CreateAccount(ctx, d, *acc)
+	_, _ = module.CreateAccount(ctx, d, *acc)
 
 	if !withPassword {
 		acc.Password = ""
@@ -32,6 +32,6 @@ func NewAccount(ctx context.Context, d *db.DB, withPassword bool) *module.Accoun
 
 func DeleteAccounts(ctx context.Context, d *db.DB, accs ...*module.Account) {
 	for _, acc := range accs {
-		_ = module.DeleteAccount(ctx, d, *acc)
+		_, _ = module.DeleteAccount(ctx, d, *acc)
 	}
 }
