@@ -285,7 +285,10 @@ func TestEditPost(t *testing.T) {
 			asserts.NoError(err)
 			defer ersp.Body.Close()
 
-			asserts.Equal(test.EditStatusCode, ersp.StatusCode)
+			ebody, err := ioutil.ReadAll(ersp.Body)
+			asserts.NoError(err)
+
+			asserts.Equal(test.EditStatusCode, ersp.StatusCode, string(ebody))
 
 			// Get article back after updating
 			greq, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
