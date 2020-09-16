@@ -97,6 +97,7 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestDeleteAccount(t *testing.T) {
+	ctx := context.Background()
 	ts := test.NewTestRouter(gin.Default(), AccountService)
 	d, r := test.NewTestDB()
 	defer func() {
@@ -106,18 +107,7 @@ func TestDeleteAccount(t *testing.T) {
 
 	asserts := assert.New(t)
 
-	users := []module.Account{
-		{
-			Username: "user0001",
-			Password: "user0001",
-			Email:    "user0001@gmail.com",
-			Phone:    null.StringFrom("12345"),
-		},
-	}
-
-	for _, user := range users {
-		_ = module.CreateAccount(context.Background(), d, user)
-	}
+	user1 := test.NewAccount(ctx, d)
 
 	tests := []struct {
 		Description string
@@ -127,8 +117,8 @@ func TestDeleteAccount(t *testing.T) {
 		{
 			Description: "Delete matched username and email pair",
 			Account: module.Account{
-				Username: "user0001",
-				Email:    "user0001@gmail.com",
+				Username: user1.Username,
+				Email:    user1.Email,
 			},
 			StatusCode: http.StatusOK,
 		}, {
@@ -169,6 +159,7 @@ func TestDeleteAccount(t *testing.T) {
 }
 
 func TestUpdateAndGetAccountInfo(t *testing.T) {
+	ctx := context.Background()
 	ts := test.NewTestRouter(gin.Default(), AccountService)
 	d, r := test.NewTestDB()
 	defer func() {
@@ -178,23 +169,13 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 
 	asserts := assert.New(t)
 
-	users := []module.Account{
-		{
-			Username: "user0001",
-			Email:    "user0001@gmail.com",
-			Phone:    null.StringFrom("0912345678"),
-		},
-	}
-
-	for _, user := range users {
-		_ = module.CreateAccount(context.Background(), d, user)
-	}
+	users := []*module.Account{test.NewAccount(ctx, d)}
 
 	defer func() {
-		for _, user := range users {
-			_ = module.DeleteAccount(context.Background(), d, user)
-		}
+		test.DeleteAccounts(ctx, d, users...)
 	}()
+
+	users[0].Phone = null.StringFrom("0909123123")
 
 	tests := []struct {
 		Description      string
@@ -203,12 +184,8 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 		GetStatusCode    int
 	}{
 		{
-			Description: "Update exised account information and get it back to verify",
-			Account: module.Account{
-				Username: "user0001",
-				Email:    "user0001@gmail.com",
-				Phone:    null.StringFrom("0909111222"),
-			},
+			Description:      "Update exised account information and get it back to verify",
+			Account:          *users[0],
 			UpdateStatusCode: http.StatusOK,
 			GetStatusCode:    http.StatusOK,
 		}, {
