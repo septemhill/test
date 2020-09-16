@@ -18,7 +18,8 @@ func Connect() *DB {
 }
 
 func ConnectToTest() *DB {
-	connInfo := fmt.Sprintf(`user=%s password=%s`, os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"))
+	connInfo := fmt.Sprintf(`user=%s password=%s port=%s`,
+		os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_PORT"))
 	db := sqlx.MustConnect("pgx", connInfo)
 	return &DB{DB: db}
 }

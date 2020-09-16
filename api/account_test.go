@@ -107,7 +107,7 @@ func TestDeleteAccount(t *testing.T) {
 
 	asserts := assert.New(t)
 
-	user1 := test.NewAccount(ctx, d)
+	user1 := test.NewAccount(ctx, d, false)
 
 	tests := []struct {
 		Description string
@@ -169,7 +169,7 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 
 	asserts := assert.New(t)
 
-	users := []*module.Account{test.NewAccount(ctx, d)}
+	users := []*module.Account{test.NewAccount(ctx, d, false)}
 
 	defer func() {
 		test.DeleteAccounts(ctx, d, users...)

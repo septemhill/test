@@ -9,7 +9,7 @@ import (
 	"gopkg.in/guregu/null.v4"
 )
 
-func NewAccount(ctx context.Context, d *db.DB) *module.Account {
+func NewAccount(ctx context.Context, d *db.DB, withPassword bool) *module.Account {
 	name := utils.GenerateRandomString(utils.RANDOM_ALL, 7)
 	pass := utils.GenerateRandomString(utils.RANDOM_ALL, 12)
 	phone := utils.GenerateRandomString(utils.RANDOM_DIGIT_ONLY, 10)
@@ -22,6 +22,10 @@ func NewAccount(ctx context.Context, d *db.DB) *module.Account {
 	}
 
 	_ = module.CreateAccount(ctx, d, *acc)
+
+	if !withPassword {
+		acc.Password = ""
+	}
 
 	return acc
 }

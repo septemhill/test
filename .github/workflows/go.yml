@@ -21,8 +21,8 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          # Maps tcp port 5432 on service container to the host
-          - 5432:5432
+          # Maps tcp port 5433 on service container to the host
+          - 5433:5432
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
@@ -58,5 +58,5 @@ jobs:
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: localhost
           POSTGRES_USER: postgres
-          POSTGRES_PORT: 5432
+          POSTGRES_PORT: 5433
           POSTGRES_PASSWORD: postgres

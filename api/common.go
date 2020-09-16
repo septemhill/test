@@ -96,7 +96,5 @@ func sendResponse(c *gin.Context, v interface{}) {
 	}
 
 	c.Header(utils.HEADER_ETAG, eTag)
-	c.JSON(http.StatusOK, gin.H{
-		"data": v,
-	})
+	c.JSON(http.StatusOK, v)
 }
