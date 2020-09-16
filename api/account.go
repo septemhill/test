@@ -14,23 +14,6 @@ import (
 
 type accountHandler struct{}
 
-func accountErrHandler(c *gin.Context, err error) {
-	var pgerr pgx.PgError
-	if err == sql.ErrNoRows {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-
-	if errors.As(err, &pgerr) {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"errMessage": pgerr.Code + ":" + pgerr.Error(),
-		})
-		return
-	}
-}
-
 func (h *accountHandler) CreateAccount(c *gin.Context) {
 	acc := new(module.Account)
 
@@ -45,7 +28,22 @@ func (h *accountHandler) CreateAccount(c *gin.Context) {
 
 	requestHandler2(c, func(ctx context.Context) (interface{}, error) {
 		return nil, module.CreateAccount(ctx, d, *acc)
-	}, accountErrHandler)
+	}, func(err error) {
+		var pgerr pgx.PgError
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if errors.As(err, &pgerr) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": pgerr.Code + ":" + pgerr.Error(),
+			})
+			return
+		}
+	})
 }
 
 func (h *accountHandler) GetAccountInfo(c *gin.Context) {
@@ -61,7 +59,22 @@ func (h *accountHandler) GetAccountInfo(c *gin.Context) {
 
 	requestHandler2(c, func(ctx context.Context) (interface{}, error) {
 		return module.GetAccountInfo(ctx, d, acc)
-	}, accountErrHandler)
+	}, func(err error) {
+		var pgerr pgx.PgError
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if errors.As(err, &pgerr) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": pgerr.Code + ":" + pgerr.Error(),
+			})
+			return
+		}
+	})
 }
 
 func (h *accountHandler) UpdateAccountInfo(c *gin.Context) {
@@ -86,7 +99,22 @@ func (h *accountHandler) UpdateAccountInfo(c *gin.Context) {
 
 	requestHandler2(c, func(ctx context.Context) (interface{}, error) {
 		return nil, module.UpdateAccountInfo(ctx, d, *acc)
-	}, accountErrHandler)
+	}, func(err error) {
+		var pgerr pgx.PgError
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if errors.As(err, &pgerr) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": pgerr.Code + ":" + pgerr.Error(),
+			})
+			return
+		}
+	})
 }
 
 func (h *accountHandler) DeleteAccount(c *gin.Context) {
@@ -112,7 +140,22 @@ func (h *accountHandler) DeleteAccount(c *gin.Context) {
 
 	requestHandler2(c, func(ctx context.Context) (interface{}, error) {
 		return nil, module.DeleteAccount(ctx, d, *acc)
-	}, accountErrHandler)
+	}, func(err error) {
+		var pgerr pgx.PgError
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if errors.As(err, &pgerr) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": pgerr.Code + ":" + pgerr.Error(),
+			})
+			return
+		}
+	})
 }
 
 func (h *accountHandler) ChangePassword(c *gin.Context) {

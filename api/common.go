@@ -32,12 +32,12 @@ type email struct {
 type reqAction func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error
 type reqAction2 func(ctx context.Context) (interface{}, error)
 
-type errHandler func(c *gin.Context, err error)
+type errHandler func(err error)
 
-func requestHandler2(c *gin.Context, handle reqAction2, errHandle func(c *gin.Context, err error)) {
+func requestHandler2(c *gin.Context, handle reqAction2, errHandle errHandler) {
 	v, err := handle(c)
 	if err != nil {
-		errHandle(c, err)
+		errHandle(err)
 		return
 	}
 
