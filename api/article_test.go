@@ -86,6 +86,78 @@ func TestNewPost(t *testing.T) {
 }
 
 func TestGetPosts(t *testing.T) {
+	ctx := context.Background()
+	ts := test.NewTestRouter(gin.Default(), BlogService)
+	d, r := test.NewTestDB()
+	defer func() {
+		d.Close()
+		r.Close()
+	}()
+
+	users := []*module.Account{
+		test.NewAccount(ctx, d, false),
+		test.NewAccount(ctx, d, false),
+	}
+
+	posts := []*module.Article{
+		test.NewPost(ctx, d, users[0].Username),
+		test.NewPost(ctx, d, users[0].Username),
+		test.NewPost(ctx, d, users[0].Username),
+		test.NewPost(ctx, d, users[0].Username),
+		test.NewPost(ctx, d, users[0].Username),
+		test.NewPost(ctx, d, users[0].Username),
+		test.NewPost(ctx, d, users[1].Username),
+		test.NewPost(ctx, d, users[1].Username),
+		test.NewPost(ctx, d, users[1].Username),
+		test.NewPost(ctx, d, users[1].Username),
+	}
+
+	defer func() {
+		test.DeleteAccounts(ctx, d, users...)
+		test.DeletePosts(ctx, d, posts...)
+	}()
+
+	tests := []struct {
+		Description string
+		Account     module.Account
+		StatusCode  int
+		Expected    []module.Article
+	}{
+		//{
+		//	Description: "Get user[0] posts, should have 6",
+		//	Account:     *users[0],
+		//	StatusCode:  http.StatusOK,
+		//	Expected:    []module.Article{*posts[0], *posts[1], *posts[2], *posts[3], *posts[4], *posts[5]},
+		//},
+		{
+			Description: "Get user[1] posts, should have 4",
+			Account:     *users[1],
+			StatusCode:  http.StatusOK,
+			Expected:    []module.Article{*posts[9], *posts[8], *posts[7], *posts[6]},
+		},
+	}
+
+	asserts := assert.New(t)
+
+	for _, test := range tests {
+		req, err := http.NewRequest("GET", ts.URL+"/blog/"+fmt.Sprint(test.Account.Username)+"/article/", nil)
+		asserts.NoError(err)
+
+		rsp, err := http.DefaultClient.Do(req)
+		asserts.NoError(err)
+		defer rsp.Body.Close()
+
+		asserts.Equal(test.StatusCode, rsp.StatusCode)
+
+		body, err := ioutil.ReadAll(rsp.Body)
+		asserts.NoError(err)
+
+		arts := make([]module.Article, 0)
+		err = json.Unmarshal(body, &arts)
+		asserts.NoError(err)
+
+		asserts.Equal(test.Expected, arts)
+	}
 }
 
 func TestGetPost(t *testing.T) {
@@ -322,5 +394,88 @@ func TestEditPost(t *testing.T) {
 }
 
 func TestDeletePost(t *testing.T) {
+	ctx := context.Background()
+	ts := test.NewTestRouter(gin.Default(), ArticleService)
+	d, r := test.NewTestDB()
+	defer func() {
+		d.Close()
+		r.Close()
+	}()
 
+	users := []*module.Account{
+		test.NewAccount(ctx, d, false),
+		test.NewAccount(ctx, d, false),
+	}
+
+	posts := []*module.Article{
+		test.NewPost(ctx, d, users[0].Username),
+		test.NewPost(ctx, d, users[1].Username),
+		test.NewPost(ctx, d, users[1].Username),
+	}
+
+	comments := []*module.Comment{
+		test.NewComment(ctx, d, users[0].Username, posts[1].ID),
+		test.NewComment(ctx, d, users[0].Username, posts[1].ID),
+		test.NewComment(ctx, d, users[0].Username, posts[2].ID),
+		test.NewComment(ctx, d, users[1].Username, posts[2].ID),
+		test.NewComment(ctx, d, users[1].Username, posts[2].ID),
+		test.NewComment(ctx, d, users[0].Username, posts[2].ID),
+	}
+
+	defer func() {
+		test.DeleteAccounts(ctx, d, users...)
+		test.DeletePosts(ctx, d, posts...)
+		test.DeleteComments(ctx, d, comments...)
+	}()
+
+	tests := []struct {
+		Description      string
+		Article          module.Article
+		DeleteStatusCode int
+		GetStatusCode    int
+	}{
+		{
+			Description:      "Delete post without comments",
+			Article:          *posts[0],
+			DeleteStatusCode: http.StatusOK,
+			GetStatusCode:    http.StatusNotFound,
+		}, {
+			Description:      "Delete post with comments",
+			Article:          *posts[1],
+			DeleteStatusCode: http.StatusOK,
+			GetStatusCode:    http.StatusNotFound,
+		}, {
+			Description: "Delete non-exist post",
+			Article: module.Article{
+				ID: 94518,
+			},
+			DeleteStatusCode: http.StatusNotFound,
+			GetStatusCode:    http.StatusNotFound,
+		},
+	}
+
+	asserts := assert.New(t)
+
+	for _, test := range tests {
+		dreq, err := http.NewRequest("DELETE", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
+		asserts.NoError(err)
+
+		drsp, err := http.DefaultClient.Do(dreq)
+		asserts.NoError(err)
+		defer drsp.Body.Close()
+
+		dbody, err := ioutil.ReadAll(drsp.Body)
+		asserts.NoError(err)
+
+		asserts.Equal(test.DeleteStatusCode, drsp.StatusCode, string(dbody))
+
+		greq, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
+		asserts.NoError(err)
+
+		grsp, err := http.DefaultClient.Do(greq)
+		asserts.NoError(err)
+		defer grsp.Body.Close()
+
+		asserts.Equal(test.GetStatusCode, grsp.StatusCode)
+	}
 }

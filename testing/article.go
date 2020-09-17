@@ -22,6 +22,8 @@ func NewPost(ctx context.Context, d *db.DB, author string) *module.Article {
 	art.ID, _ = module.NewPost(ctx, d, art)
 	arti, _ := module.GetPost(ctx, d, art.ID)
 
+	arti.Comments = nil
+
 	return arti
 }
 

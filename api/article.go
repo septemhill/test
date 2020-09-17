@@ -119,6 +119,7 @@ func (h *articleHandler) DeletePost(c *gin.Context) {
 }
 
 func (h *articleHandler) GetPosts(c *gin.Context) {
+	user := c.Param("user")
 	pi := paginator{Size: 10, Offset: 0, Ascend: false}
 	if err := c.BindQuery(&pi); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -130,7 +131,7 @@ func (h *articleHandler) GetPosts(c *gin.Context) {
 	d := middleware.PostgresDB(c)
 
 	requestHandler(c, func(ctx context.Context) (interface{}, error) {
-		return module.GetPosts(c, d, pi.Size, pi.Offset, pi.Ascend)
+		return module.GetPosts(c, d, user, pi.Size, pi.Offset, pi.Ascend)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {

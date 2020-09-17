@@ -11,7 +11,7 @@ import (
 
 type Article struct {
 	ID       int       `db:"id" json:"id" uri:"id"`
-	Author   string    `db:"author" json:"author"`
+	Author   string    `db:"author" json:"author" uri:"user"`
 	Title    string    `db:"title" json:"title"`
 	Content  string    `db:"content" json:"content"`
 	CreateAt time.Time `db:"create_at" json:"createAt"`
@@ -33,7 +33,7 @@ func NewPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
 	expr := `INSERT INTO articles VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, art.Author, art.Title, art.Content,
-			time.Now().Truncate(time.Microsecond), time.Now().Truncate(time.Microsecond)); err != nil {
+			time.Now().Truncate(time.Millisecond), time.Now().Truncate(time.Millisecond)); err != nil {
 			return err
 		}
 		return nil
@@ -46,7 +46,7 @@ func EditPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
 	var id int
 	expr := `UPDATE articles SET title = $1, content = $2, update_at = $3 WHERE id = $4 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, time.Now().Truncate(time.Microsecond), art.ID); err != nil {
+		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, time.Now().Truncate(time.Millisecond), art.ID); err != nil {
 			return err
 		}
 		return nil
@@ -57,9 +57,14 @@ func EditPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
 
 func DeletePost(ctx context.Context, d *db.DB, postID int) (int, error) {
 	var id int
-	expr := `DELETE FROM articles WHERE id = $1 RETURNING id`
+	commExpr := `WITH deleted AS (DELETE FROM comments WHERE art_id = $1 RETURNING id) SELECT COUNT(*) FROM deleted`
+	artiExpr := `DELETE FROM articles WHERE id = $1 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, postID); err != nil {
+		if err := tx.GetContext(ctx, &id, commExpr, postID); err != nil {
+			return err
+		}
+
+		if err := tx.GetContext(ctx, &id, artiExpr, postID); err != nil {
 			return err
 		}
 		return nil
@@ -68,8 +73,8 @@ func DeletePost(ctx context.Context, d *db.DB, postID int) (int, error) {
 	return id, err
 }
 
-func GetPosts(ctx context.Context, d *db.DB, size, offset int, asc bool) ([]Article, error) {
-	expr := `SELECT * FROM articles ORDER BY create_at %s LIMIT $1 OFFSET $2`
+func GetPosts(ctx context.Context, d *db.DB, user string, size, offset int, asc bool) ([]Article, error) {
+	expr := `SELECT * FROM articles WHERE author = $1 ORDER BY create_at %s LIMIT $2 OFFSET $3`
 	if !asc {
 		expr = fmt.Sprintf(expr, "DESC")
 	} else {
@@ -78,7 +83,7 @@ func GetPosts(ctx context.Context, d *db.DB, size, offset int, asc bool) ([]Arti
 
 	arts := []Article{}
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.SelectContext(ctx, &arts, expr, size, offset); err != nil {
+		if err := tx.SelectContext(ctx, &arts, expr, user, size, offset); err != nil {
 			return err
 		}
 		return nil
@@ -117,7 +122,7 @@ func NewComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
 
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, comment.ArticleID, comment.Author, comment.Content,
-			time.Now().Truncate(time.Microsecond), time.Now().Truncate(time.Microsecond)); err != nil {
+			time.Now().Truncate(time.Millisecond), time.Now().Truncate(time.Millisecond)); err != nil {
 			return err
 		}
 		return nil

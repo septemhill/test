@@ -28,6 +28,12 @@ CREATE TABLE IF NOT EXISTS articles (
 	CONSTRAINT fk_author FOREIGN KEY (author) REFERENCES accounts(username)
 );
 
+CREATE TABLE IF NOT EXIST articles_tag {
+	art_id BIGSERIAL NOT NULL,
+	tag_name VARCHAR(50) NOT NULL,
+	PRIMARY KEY (art_id, tagname)
+}
+
 CREATE TABLE IF NOT EXISTS comments (
 	id BIGSERIAL NOT NULL PRIMARY KEY,
 	art_id BIGSERIAL NOT NULL, 
