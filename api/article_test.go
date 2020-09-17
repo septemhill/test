@@ -123,12 +123,12 @@ func TestGetPosts(t *testing.T) {
 		StatusCode  int
 		Expected    []module.Article
 	}{
-		//{
-		//	Description: "Get user[0] posts, should have 6",
-		//	Account:     *users[0],
-		//	StatusCode:  http.StatusOK,
-		//	Expected:    []module.Article{*posts[0], *posts[1], *posts[2], *posts[3], *posts[4], *posts[5]},
-		//},
+		{
+			Description: "Get user[0] posts, should have 6",
+			Account:     *users[0],
+			StatusCode:  http.StatusOK,
+			Expected:    []module.Article{*posts[5], *posts[4], *posts[3], *posts[2], *posts[1], *posts[0]},
+		},
 		{
 			Description: "Get user[1] posts, should have 4",
 			Account:     *users[1],
