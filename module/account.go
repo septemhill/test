@@ -86,3 +86,18 @@ func DeleteAccount(ctx context.Context, d *db.DB, acc Account) (int, error) {
 
 	return id, err
 }
+
+func ChangePassword(ctx context.Context, d *db.DB, email, newPassword string) (int, error) {
+	var id int
+	expr := `UPDATE accounts_private SET password = $1 WHERE email = $2 RETURNING id`
+
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, &id, expr, newPassword, email); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return id, err
+}

@@ -1,8 +1,13 @@
 package module
 
+const sessionKey = "session-token-key-"
 const signUpRandomKey = "sign-up-key-"
 const forgetPasswdKey = "forget-passwd-key-"
 const resetPasswdKey = "reset-passwd-key-"
+
+func SessionTokenPrefix(key string) string {
+	return sessionKey + key
+}
 
 func SignupKeyPrefix(key string) string {
 	return signUpRandomKey + key

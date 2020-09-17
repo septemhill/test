@@ -18,6 +18,13 @@ CREATE TABLE IF NOT EXISTS accounts_private (
 	CONSTRAINT login_type_check CHECK (login_type in ('NORMAL', 'OAUTH2_GOOGLE'))
 );
 
+CREATE TABLE IF NOT EXISTS permissions {
+	username VARCHAR(30) NOT NULL,
+	perm int NOT NULL,
+	PRIMARY KEY(username, perm),
+	CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES accounts(username)
+}
+
 CREATE TABLE IF NOT EXISTS articles (
 	id BIGSERIAL NOT NULL PRIMARY KEY,
 	author VARCHAR(30) NOT NULL,

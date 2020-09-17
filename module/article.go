@@ -16,6 +16,7 @@ type Article struct {
 	Content  string    `db:"content" json:"content"`
 	CreateAt time.Time `db:"create_at" json:"createAt"`
 	UpdateAt time.Time `db:"update_at" json:"updateAt"`
+	Tags     []string  `json:"tags"`
 	Comments []Comment `json:"comments"`
 }
 
@@ -32,8 +33,8 @@ func NewPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
 	var id int
 	expr := `INSERT INTO articles VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, art.Author, art.Title, art.Content,
-			time.Now().Truncate(time.Millisecond), time.Now().Truncate(time.Millisecond)); err != nil {
+		curr := time.Now().Truncate(time.Millisecond).UTC()
+		if err := tx.GetContext(ctx, &id, expr, art.Author, art.Title, art.Content, curr, curr); err != nil {
 			return err
 		}
 		return nil
@@ -46,7 +47,8 @@ func EditPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
 	var id int
 	expr := `UPDATE articles SET title = $1, content = $2, update_at = $3 WHERE id = $4 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, time.Now().Truncate(time.Millisecond), art.ID); err != nil {
+		curr := time.Now().Truncate(time.Millisecond).UTC()
+		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, curr, art.ID); err != nil {
 			return err
 		}
 		return nil
@@ -121,8 +123,8 @@ func NewComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
 	expr := `INSERT INTO comments VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING id`
 
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, comment.ArticleID, comment.Author, comment.Content,
-			time.Now().Truncate(time.Millisecond), time.Now().Truncate(time.Millisecond)); err != nil {
+		curr := time.Now().Truncate(time.Millisecond).UTC()
+		if err := tx.GetContext(ctx, &id, expr, comment.ArticleID, comment.Author, comment.Content, curr, curr); err != nil {
 			return err
 		}
 		return nil

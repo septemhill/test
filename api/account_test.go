@@ -239,3 +239,41 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 		})
 	}
 }
+
+func TestChangePassword(t *testing.T) {
+	// ctx := context.Background()
+	// ts := test.NewTestRouter(gin.Default(), RootService, AccountService)
+	// d, r := test.NewTestDB()
+	// defer func() {
+	// 	d.Close()
+	// 	r.Close()
+	// }()
+
+	// users := []*module.Account{
+	// 	test.NewAccount(ctx, d, true),
+	// }
+
+	// tests := []struct {
+	// 	Description              string
+	// 	Account                  module.Account
+	// 	Password                 password
+	// 	LoginBeforeChgStatusCode int
+	// 	LoginAfterChgStatusCode  int
+	// 	PasswordChgStatusCode    int
+	// }{}
+
+	// asserts := assert.New(t)
+
+	// for _, test := range tests {
+	// 	lbb, err := json.Marshal(&test.Account)
+	// 	asserts.NoError(err)
+
+	// 	lbreq, err := http.NewRequest("POST", ts.URL+"/login", bytes.NewBuffer(lbb))
+	// 	asserts.NoError(err)
+
+	// 	lbrsp, err := http.DefaultClient.Do(lbreq)
+	// 	asserts.NoError(err)
+
+	// 	asserts.Equal(test.LoginBeforeChgStatusCode, lbrsp.StatusCode)
+	// }
+}

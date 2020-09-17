@@ -34,7 +34,7 @@ func Login(ctx context.Context, d *db.DB, r *redis.Client, email, password strin
 
 	token := utils.GenerateRandomString(utils.RANDOM_HEX_ONLY, SESSION_TOKEN_LEN)
 
-	if _, err := r.Set(token, email, time.Hour*1).Result(); err != nil {
+	if _, err := r.Set(SessionTokenPrefix(token), email, time.Hour*1).Result(); err != nil {
 		return "", err
 	}
 

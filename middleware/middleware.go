@@ -14,10 +14,14 @@ import (
 func ValidateSessionToken(c *gin.Context) {
 	token := c.GetHeader(utils.HEADER_SESSION_TOKEN)
 	rdb := RedisDB(c)
-	if _, err := rdb.Get(token).Result(); err == redis.Nil {
+
+	email, err := rdb.Get(token).Result()
+	if err == redis.Nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"errMessage": "Invalid session token"})
 		return
 	}
+
+	c.Set(module.RESOURCE_USER_EMAIL, email)
 	c.Next()
 }
 
@@ -35,6 +39,10 @@ func PostgresDB(c *gin.Context) *db.DB {
 
 func Mailer(c *gin.Context) *utils.Mailer {
 	return c.MustGet(module.RESOURCE_MAILER).(*utils.Mailer)
+}
+
+func UserEmail(c *gin.Context) string {
+	return c.MustGet(module.RESOURCE_USER_EMAIL).(string)
 }
 
 func SetLogger(logger *logrus.Logger) gin.HandlerFunc {
