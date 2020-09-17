@@ -1,8 +1,8 @@
-.PHONY: all downloadImgs runlint migration env db runtests build 
+.PHONY: all downloadImgs lint migration env db runtests build 
 
 glabel = "\033[92m$(1)\033[0m"
 
-all: downloadImgs runlint runTests build
+all: downloadImgs lint runTests build
 
 downloadImgs:
 	@echo $(call glabel,"[Downloading images]")
@@ -10,9 +10,9 @@ downloadImgs:
 	@docker pull postgres:13
 	@docker pull septemhill/liquibase:latest
 
-runlint: downloadImgs
+lint: downloadImgs
 	@echo $(call glabel,"[Running golangci-lint check]")
-	@docker run -v /home/travis/gopath/src/github.com/septemhill/test:/app -w /app golangci/golangci-lint golangci-lint run
+	@docker run -v $(PWD):/app -w /app golangci/golangci-lint golangci-lint run
 
 migration: downloadImgs env
 	@echo $(call glabel,"[Running SQL migration]")

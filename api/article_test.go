@@ -191,7 +191,7 @@ func TestGetPost(t *testing.T) {
 			asserts.NoError(err)
 
 			asserts.Equal(test.Comments, len(article.Comments))
-			asserts.Equal(test.Expected, article)
+			asserts.Equal(test.Expected, *article)
 		})
 	}
 }
@@ -264,6 +264,7 @@ func TestEditPost(t *testing.T) {
 				Content: posts[1].Content,
 			},
 			EditStatusCode: http.StatusNotFound,
+			GetStatusCode:  http.StatusNotFound,
 		},
 		// {
 		// 	Description: "Edit existed article with wrong author",
@@ -278,7 +279,10 @@ func TestEditPost(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Description, func(t *testing.T) {
-			ereq, err := http.NewRequest("PUT", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
+			b, err := json.Marshal(&test.Article)
+			asserts.NoError(err)
+
+			ereq, err := http.NewRequest("PUT", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), bytes.NewBuffer(b))
 			asserts.NoError(err)
 
 			ersp, err := http.DefaultClient.Do(ereq)
@@ -299,6 +303,10 @@ func TestEditPost(t *testing.T) {
 			defer grsp.Body.Close()
 
 			asserts.Equal(test.GetStatusCode, grsp.StatusCode)
+
+			if test.GetStatusCode == http.StatusNotFound {
+				return
+			}
 
 			body, err := ioutil.ReadAll(grsp.Body)
 			asserts.NoError(err)

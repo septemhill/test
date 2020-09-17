@@ -56,7 +56,7 @@ func (h *articleHandler) EditPost(c *gin.Context) {
 	}
 
 	art := new(module.Article)
-	if err := c.BindJSON(&art); err != nil {
+	if err := c.BindJSON(art); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),
 		})

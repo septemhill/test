@@ -32,7 +32,8 @@ func NewPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
 	var id int
 	expr := `INSERT INTO articles VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, art.Author, art.Title, art.Content, time.Now(), time.Now()); err != nil {
+		if err := tx.GetContext(ctx, &id, expr, art.Author, art.Title, art.Content,
+			time.Now().Truncate(time.Microsecond), time.Now().Truncate(time.Microsecond)); err != nil {
 			return err
 		}
 		return nil
@@ -45,7 +46,7 @@ func EditPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
 	var id int
 	expr := `UPDATE articles SET title = $1, content = $2, update_at = $3 WHERE id = $4 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, time.Now(), art.ID); err != nil {
+		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, time.Now().Truncate(time.Microsecond), art.ID); err != nil {
 			return err
 		}
 		return nil
@@ -115,7 +116,8 @@ func NewComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
 	expr := `INSERT INTO comments VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING id`
 
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, comment.ArticleID, comment.Author, comment.Content, time.Now(), time.Now()); err != nil {
+		if err := tx.GetContext(ctx, &id, expr, comment.ArticleID, comment.Author, comment.Content,
+			time.Now().Truncate(time.Microsecond), time.Now().Truncate(time.Microsecond)); err != nil {
 			return err
 		}
 		return nil
@@ -151,6 +153,22 @@ func GetComments(ctx context.Context, d *db.DB, postID, size, offset int) ([]Com
 	})
 
 	return comments, err
+}
+
+func GetComment(ctx context.Context, d *db.DB, postID, commentID int) (*Comment, error) {
+	expr := `SELECT * FROM comments WHERE id = $1 AND art_id = $2`
+
+	comment := new(Comment)
+
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, comment, expr, commentID, postID); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return comment, err
 }
 
 func DeleteComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {

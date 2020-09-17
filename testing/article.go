@@ -3,7 +3,6 @@ package testing
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/septemhill/test/db"
 	"github.com/septemhill/test/module"
@@ -15,15 +14,15 @@ func NewPost(ctx context.Context, d *db.DB, author string) *module.Article {
 	cs, _ := diceware.Generate(20)
 
 	art := &module.Article{
-		Author:   author,
-		Title:    strings.Join(ts, " "),
-		Content:  strings.Join(cs, " "),
-		CreateAt: time.Now(),
-		UpdateAt: time.Now(),
+		Author:  author,
+		Title:   strings.Join(ts, " "),
+		Content: strings.Join(cs, " "),
 	}
-	art.ID, _ = module.NewPost(ctx, d, art)
 
-	return art
+	art.ID, _ = module.NewPost(ctx, d, art)
+	arti, _ := module.GetPost(ctx, d, art.ID)
+
+	return arti
 }
 
 func DeletePosts(ctx context.Context, d *db.DB, arts ...*module.Article) {
@@ -50,13 +49,12 @@ func NewComment(ctx context.Context, d *db.DB, author string, artID int) *module
 		ArticleID: artID,
 		Author:    author,
 		Content:   strings.Join(cs, " "),
-		CreateAt:  time.Now(),
-		UpdateAt:  time.Now(),
 	}
 
-	_, _ = module.NewComment(ctx, d, comment)
+	comment.ID, _ = module.NewComment(ctx, d, comment)
+	comm, _ := module.GetComment(ctx, d, artID, comment.ID)
 
-	return comment
+	return comm
 }
 
 func DeleteComments(ctx context.Context, d *db.DB, comments ...*module.Comment) {
