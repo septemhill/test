@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS articles (
 CREATE TABLE IF NOT EXISTS articles_tag (
 	art_id BIGSERIAL NOT NULL,
 	tag_name VARCHAR(50) NOT NULL,
-	PRIMARY KEY (art_id, tagname)
+	PRIMARY KEY (art_id, tag_name),
+	CONSTRAINT fk_art_id FOREIGN KEY (art_id) REFERENCES articles(id)
 );
 
 CREATE TABLE IF NOT EXISTS comments (
