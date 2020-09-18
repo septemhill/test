@@ -1,8 +1,8 @@
-.PHONY: all downloadImgs lint migration env db runtests build 
+.PHONY: all downloadImgs lint migration env db tests build 
 
 glabel = "\033[92m$(1)\033[0m"
 
-all: downloadImgs lint runTests build
+all: downloadImgs lint tests build
 
 downloadImgs:
 	@echo $(call glabel,"[Downloading images]")
@@ -30,7 +30,7 @@ env: db
 	@export POSTGRES_PASSWORD=postgres
 	@export POSTGRES_PORT=5433
 
-runtests: migration
+tests: migration
 	@echo $(call glabel,"[Running test cases]")
 	@go test -v ./...
 

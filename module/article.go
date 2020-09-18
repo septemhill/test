@@ -84,12 +84,24 @@ func GetPosts(ctx context.Context, d *db.DB, user string, size, offset int, asc 
 	}
 
 	arts := []Article{}
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.SelectContext(ctx, &arts, expr, user, size, offset); err != nil {
 			return err
 		}
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	loc, err := time.LoadLocation("UTC")
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(arts); i++ {
+		arts[i].CreateAt = arts[i].CreateAt.In(loc)
+		arts[i].UpdateAt = arts[i].UpdateAt.In(loc)
+	}
 
 	return arts, err
 }
@@ -113,7 +125,14 @@ func GetPost(ctx context.Context, d *db.DB, postID int) (*Article, error) {
 		return nil, err
 	}
 
+	loc, err := time.LoadLocation("UTC")
+	if err != nil {
+		return nil, err
+	}
+
 	art.Comments = comments
+	art.CreateAt = art.CreateAt.In(loc)
+	art.UpdateAt = art.UpdateAt.In(loc)
 
 	return art, nil
 }
@@ -152,12 +171,24 @@ func GetComments(ctx context.Context, d *db.DB, postID, size, offset int) ([]Com
 
 	comments := []Comment{}
 
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.SelectContext(ctx, &comments, expr, postID, size, offset); err != nil {
 			return err
 		}
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	loc, err := time.LoadLocation("UTC")
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(comments); i++ {
+		comments[i].CreateAt = comments[i].CreateAt.In(loc)
+		comments[i].UpdateAt = comments[i].UpdateAt.In(loc)
+	}
 
 	return comments, err
 }
@@ -167,13 +198,23 @@ func GetComment(ctx context.Context, d *db.DB, postID, commentID int) (*Comment,
 
 	comment := new(Comment)
 
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, comment, expr, commentID, postID); err != nil {
 			return err
 		}
 
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	loc, err := time.LoadLocation("UTC")
+	if err != nil {
+		return nil, err
+	}
+
+	comment.CreateAt = comment.CreateAt.In(loc)
+	comment.UpdateAt = comment.UpdateAt.In(loc)
 
 	return comment, err
 }
