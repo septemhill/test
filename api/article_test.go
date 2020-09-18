@@ -151,7 +151,6 @@ func TestGetPosts(t *testing.T) {
 
 	for _, test := range tests {
 		req, err := NewRequestWithTestHeader("GET", ts.URL+"/blog/"+fmt.Sprint(test.Account.Username)+"/article/", nil, header)
-		//req, err := http.NewRequest("GET", ts.URL+"/blog/"+fmt.Sprint(test.Account.Username)+"/article/", nil)
 		asserts.NoError(err)
 
 		rsp, err := http.DefaultClient.Do(req)
@@ -259,7 +258,6 @@ func TestGetPost(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.Description, func(t *testing.T) {
 			req, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil, header)
-			//req, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
 			asserts.NoError(err)
 
 			rsp, err := http.DefaultClient.Do(req)
@@ -377,7 +375,6 @@ func TestEditPost(t *testing.T) {
 			asserts.NoError(err)
 
 			ereq, err := NewRequestWithTestHeader("PUT", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), bytes.NewBuffer(b), header)
-			//ereq, err := http.NewRequest("PUT", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), bytes.NewBuffer(b))
 			asserts.NoError(err)
 
 			ersp, err := http.DefaultClient.Do(ereq)
@@ -390,9 +387,7 @@ func TestEditPost(t *testing.T) {
 			asserts.Equal(test.EditStatusCode, ersp.StatusCode, string(ebody))
 
 			// Get article back after updating
-
 			greq, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil, header)
-			//greq, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
 			asserts.NoError(err)
 
 			grsp, err := http.DefaultClient.Do(greq)
@@ -488,7 +483,6 @@ func TestDeletePost(t *testing.T) {
 
 	for _, test := range tests {
 		dreq, err := NewRequestWithTestHeader("DELETE", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil, header)
-		//dreq, err := http.NewRequest("DELETE", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
 		asserts.NoError(err)
 
 		drsp, err := http.DefaultClient.Do(dreq)
@@ -501,7 +495,6 @@ func TestDeletePost(t *testing.T) {
 		asserts.Equal(test.DeleteStatusCode, drsp.StatusCode, string(dbody))
 
 		greq, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil, header)
-		//greq, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
 		asserts.NoError(err)
 
 		grsp, err := http.DefaultClient.Do(greq)
