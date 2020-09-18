@@ -23,6 +23,19 @@ jobs:
         ports:
           # Maps tcp port 5433 on service container to the host
           - 5433:5432
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5433 on service container to the host
+          - 6380:6379
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v2

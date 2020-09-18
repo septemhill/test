@@ -10,8 +10,10 @@ before_install:
   - docker pull golangci/golangci-lint
   - docker pull postgres:13
   - docker pull septemhill/liquibase:latest
+  - docker pull redis
   - docker run -v /home/travis/gopath/src/github.com/septemhill/test:/app -w /app golangci/golangci-lint golangci-lint run
   - docker run -p 5433:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+  - docker run -p 6380:6379 -d redis
   - docker run --net=host -v /home/travis/gopath/src/github.com/septemhill/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5433/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
 
 sudo: true
