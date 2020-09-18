@@ -76,7 +76,6 @@ func TestNewPost(t *testing.T) {
 			asserts.NoError(err)
 
 			req, err := NewRequestWithTestHeader("POST", ts.URL+"/article/", bytes.NewBuffer(b), header)
-			//req, err := http.NewRequest("POST", ts.URL+"/article/", bytes.NewBuffer(b))
 			asserts.NoError(err)
 
 			rsp, err := http.DefaultClient.Do(req)

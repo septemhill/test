@@ -41,6 +41,6 @@ func NewTestDB() (*db.DB, *redis.Client) {
 
 func NewTestSessionToken(r *redis.Client) string {
 	token := utils.GenerateRandomString(utils.RANDOM_HEX_ONLY, module.SESSION_TOKEN_LEN)
-	r.Set(module.SessionTokenPrefix(token), "testonly@fakemail.co", time.Hour*1).Result()
+	_, _ = r.Set(module.SessionTokenPrefix(token), "testonly@fakemail.co", time.Hour*1).Result()
 	return token
 }

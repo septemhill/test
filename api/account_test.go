@@ -156,7 +156,6 @@ func TestDeleteAccount(t *testing.T) {
 			asserts.NoError(err)
 
 			req, err := NewRequestWithTestHeader("DELETE", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b), header)
-			//req, err := http.NewRequest("DELETE", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b))
 			asserts.NoError(err)
 
 			rsp, err := http.DefaultClient.Do(req)
@@ -233,7 +232,6 @@ func TestUpdateAndGetAccountInfo(t *testing.T) {
 			asserts.Equal(test.UpdateStatusCode, ursp.StatusCode, string(ubody))
 
 			greq, err := NewRequestWithTestHeader("GET", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b), header)
-			//greq, err := http.NewRequest("GET", ts.URL+"/account/"+test.Account.Username, bytes.NewBuffer(b), header)
 			asserts.NoError(err)
 
 			grsp, err := http.DefaultClient.Do(greq)
