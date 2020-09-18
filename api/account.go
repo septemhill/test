@@ -194,6 +194,7 @@ func AccountService(r gin.IRouter) gin.IRouter {
 	handler := accountHandler{}
 	account := r.Group("/account")
 
+	account.Use(middleware.SetTestPostgresDB(), middleware.SetTestRedisDB())
 	account.Use(middleware.ValidateSessionToken)
 
 	account.POST("/", handler.CreateAccount)

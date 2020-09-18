@@ -13,11 +13,20 @@ import (
 
 func ValidateSessionToken(c *gin.Context) {
 	token := c.GetHeader(utils.HEADER_SESSION_TOKEN)
-	rdb := RedisDB(c)
+	r := RedisDB(c)
 
-	email, err := rdb.Get(token).Result()
-	if err == redis.Nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"errMessage": "Invalid session token"})
+	email, err := r.Get(module.SessionTokenPrefix(token)).Result()
+	if err != nil {
+		if err == redis.Nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"errMessage": "Invalid session token(" + err.Error() + ")",
+			})
+			return
+		}
+
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"errMessage": err.Error(),
+		})
 		return
 	}
 
@@ -71,13 +80,27 @@ func SetTestPostgresDB() gin.HandlerFunc {
 }
 
 func SetRedisDB() gin.HandlerFunc {
-	r := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-
 	return func(c *gin.Context) {
+		r := redis.NewClient(&redis.Options{
+			Addr:     "localhost:6379",
+			Password: "", // no password set
+			DB:       0,  // use default DB
+		})
+
+		c.Set(module.RESOURCE_MDB, r)
+		c.Next()
+		r.Close()
+	}
+}
+
+func SetTestRedisDB() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		r := redis.NewClient(&redis.Options{
+			Addr:     "localhost:6380",
+			Password: "", // no password set
+			DB:       0,  // use default DB
+		})
+
 		c.Set(module.RESOURCE_MDB, r)
 		c.Next()
 		r.Close()

@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/septemhill/test/module"
 	test "github.com/septemhill/test/testing"
+	"github.com/septemhill/test/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,8 +24,12 @@ func TestNewPost(t *testing.T) {
 		d.Close()
 		r.Close()
 	}()
+	tk := test.NewTestSessionToken(r)
 
 	user := test.NewAccount(ctx, d, false)
+	header := map[string]string{
+		utils.HEADER_SESSION_TOKEN: tk,
+	}
 
 	tests := []struct {
 		Description string
@@ -70,7 +75,8 @@ func TestNewPost(t *testing.T) {
 			b, err := json.Marshal(&test.Article)
 			asserts.NoError(err)
 
-			req, err := http.NewRequest("POST", ts.URL+"/article/", bytes.NewBuffer(b))
+			req, err := NewRequestWithTestHeader("POST", ts.URL+"/article/", bytes.NewBuffer(b), header)
+			//req, err := http.NewRequest("POST", ts.URL+"/article/", bytes.NewBuffer(b))
 			asserts.NoError(err)
 
 			rsp, err := http.DefaultClient.Do(req)
@@ -93,6 +99,7 @@ func TestGetPosts(t *testing.T) {
 		d.Close()
 		r.Close()
 	}()
+	tk := test.NewTestSessionToken(r)
 
 	users := []*module.Account{
 		test.NewAccount(ctx, d, false),
@@ -117,6 +124,10 @@ func TestGetPosts(t *testing.T) {
 		test.DeletePosts(ctx, d, posts...)
 	}()
 
+	header := map[string]string{
+		utils.HEADER_SESSION_TOKEN: tk,
+	}
+
 	tests := []struct {
 		Description string
 		Account     module.Account
@@ -140,7 +151,8 @@ func TestGetPosts(t *testing.T) {
 	asserts := assert.New(t)
 
 	for _, test := range tests {
-		req, err := http.NewRequest("GET", ts.URL+"/blog/"+fmt.Sprint(test.Account.Username)+"/article/", nil)
+		req, err := NewRequestWithTestHeader("GET", ts.URL+"/blog/"+fmt.Sprint(test.Account.Username)+"/article/", nil, header)
+		//req, err := http.NewRequest("GET", ts.URL+"/blog/"+fmt.Sprint(test.Account.Username)+"/article/", nil)
 		asserts.NoError(err)
 
 		rsp, err := http.DefaultClient.Do(req)
@@ -168,6 +180,7 @@ func TestGetPost(t *testing.T) {
 		d.Close()
 		r.Close()
 	}()
+	tk := test.NewTestSessionToken(r)
 
 	users := []*module.Account{
 		test.NewAccount(ctx, d, false),
@@ -193,6 +206,10 @@ func TestGetPost(t *testing.T) {
 		test.DeleteComments(ctx, d, comments...)
 		test.DeletePosts(ctx, d, posts...)
 	}()
+
+	header := map[string]string{
+		utils.HEADER_SESSION_TOKEN: tk,
+	}
 
 	tests := []struct {
 		Description string
@@ -242,7 +259,8 @@ func TestGetPost(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Description, func(t *testing.T) {
-			req, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
+			req, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil, header)
+			//req, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
 			asserts.NoError(err)
 
 			rsp, err := http.DefaultClient.Do(req)
@@ -276,6 +294,7 @@ func TestEditPost(t *testing.T) {
 		d.Close()
 		r.Close()
 	}()
+	tk := test.NewTestSessionToken(r)
 
 	users := []*module.Account{
 		test.NewAccount(ctx, d, false),
@@ -286,6 +305,10 @@ func TestEditPost(t *testing.T) {
 		test.NewPost(ctx, d, users[0].Username),
 		test.NewPost(ctx, d, users[0].Username),
 		test.NewPost(ctx, d, users[1].Username),
+	}
+
+	header := map[string]string{
+		utils.HEADER_SESSION_TOKEN: tk,
 	}
 
 	tests := []struct {
@@ -354,7 +377,8 @@ func TestEditPost(t *testing.T) {
 			b, err := json.Marshal(&test.Article)
 			asserts.NoError(err)
 
-			ereq, err := http.NewRequest("PUT", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), bytes.NewBuffer(b))
+			ereq, err := NewRequestWithTestHeader("PUT", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), bytes.NewBuffer(b), header)
+			//ereq, err := http.NewRequest("PUT", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), bytes.NewBuffer(b))
 			asserts.NoError(err)
 
 			ersp, err := http.DefaultClient.Do(ereq)
@@ -367,7 +391,9 @@ func TestEditPost(t *testing.T) {
 			asserts.Equal(test.EditStatusCode, ersp.StatusCode, string(ebody))
 
 			// Get article back after updating
-			greq, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
+
+			greq, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil, header)
+			//greq, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
 			asserts.NoError(err)
 
 			grsp, err := http.DefaultClient.Do(greq)
@@ -401,6 +427,7 @@ func TestDeletePost(t *testing.T) {
 		d.Close()
 		r.Close()
 	}()
+	tk := test.NewTestSessionToken(r)
 
 	users := []*module.Account{
 		test.NewAccount(ctx, d, false),
@@ -427,6 +454,10 @@ func TestDeletePost(t *testing.T) {
 		test.DeletePosts(ctx, d, posts...)
 		test.DeleteComments(ctx, d, comments...)
 	}()
+
+	header := map[string]string{
+		utils.HEADER_SESSION_TOKEN: tk,
+	}
 
 	tests := []struct {
 		Description      string
@@ -457,7 +488,8 @@ func TestDeletePost(t *testing.T) {
 	asserts := assert.New(t)
 
 	for _, test := range tests {
-		dreq, err := http.NewRequest("DELETE", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
+		dreq, err := NewRequestWithTestHeader("DELETE", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil, header)
+		//dreq, err := http.NewRequest("DELETE", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
 		asserts.NoError(err)
 
 		drsp, err := http.DefaultClient.Do(dreq)
@@ -469,7 +501,8 @@ func TestDeletePost(t *testing.T) {
 
 		asserts.Equal(test.DeleteStatusCode, drsp.StatusCode, string(dbody))
 
-		greq, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
+		greq, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil, header)
+		//greq, err := http.NewRequest("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID), nil)
 		asserts.NoError(err)
 
 		grsp, err := http.DefaultClient.Do(greq)

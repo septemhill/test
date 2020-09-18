@@ -9,6 +9,7 @@ downloadImgs:
 	@docker pull golangci/golangci-lint
 	@docker pull postgres:13
 	@docker pull septemhill/liquibase:latest
+	@docker pull redis
 
 lint: downloadImgs
 	@echo $(call glabel,"[Running golangci-lint check]")
@@ -19,8 +20,9 @@ migration: downloadImgs env
 	@docker run --net=host -v $(PWD)/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5433/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
 
 db:
-	@echo $(call glabel,"Running Postgres docker")
+	@echo $(call glabel,"Running database dockers")
 	@docker run -p 5433:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+	@docker run -p 6380:6379 -d redis
 
 env: db
 	@echo $(call glabel,"[Setup environment variable]")

@@ -35,9 +35,7 @@ func (h *rootHandler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": gin.H{
-			"code": code,
-		},
+		"code": code,
 	})
 }
 
@@ -67,6 +65,7 @@ func (h *rootHandler) VerifyUserRegistration(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),
 		})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
