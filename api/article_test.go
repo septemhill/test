@@ -505,7 +505,7 @@ func TestDeletePost(t *testing.T) {
 	}
 }
 
-func TestNewComment(t *testing.T) {
+func TestNewAndGetComments(t *testing.T) {
 	ctx := context.Background()
 	ts, d, r, hdr := test.NewTestEntities(gin.Default(), ArticleService)
 	defer func() {
@@ -617,13 +617,12 @@ func TestNewComment(t *testing.T) {
 				asserts.Equal(test.Expected[i].Author, comments[i].Author)
 				asserts.Equal(test.Expected[i].Content, comments[i].Content)
 			}
-
 		})
 	}
 }
 
-func TestGetComments(t *testing.T) {}
+func TestDeleteComment(t *testing.T) {
+}
 
-func TestDeleteComment(t *testing.T) {}
-
-func TestUpdateComment(t *testing.T) {}
+func TestUpdateComment(t *testing.T) {
+}
