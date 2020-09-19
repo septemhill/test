@@ -1,4 +1,4 @@
-.PHONY: all downloadImgs lint migration env db tests build 
+.PHONY: all downloadImgs lint migration env testdb proddb tests build 
 
 glabel = "\033[92m$(1)\033[0m"
 
@@ -19,12 +19,12 @@ migration: downloadImgs env
 	@echo $(call glabel,"[Running SQL migration]")
 	@docker run --net=host -v $(PWD)/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5433/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
 
-db:
-	@echo $(call glabel,"Running database dockers")
-	@docker run -p 5433:5432 -e POSTGRES_PASSWORD=postgres -d postgres
-	@docker run -p 6380:6379 -d redis
+testdb:
+	@echo $(call glabel,"Running test env database dockers")
+	@docker run --name test_postgres -p 5433:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+	@docker run --name test_redis -p 6380:6379 -d redis
 
-env: db
+env: testdb
 	@echo $(call glabel,"[Setup environment variable]")
 	@export POSTGRES_USER=postgres
 	@export POSTGRES_PASSWORD=postgres
@@ -37,3 +37,11 @@ tests: migration
 build:
 	@echo $(call glabel, "[Running build]")
 	@go build -v
+
+proddb:
+	@echo $(call glabel, "[Running production env database dockers]")
+	@docker run --name prod_postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+	@docker run --name prod_redis -p 6379:6379 -d redis
+
+run: downloadImgs build proddb
+	./test 3000
