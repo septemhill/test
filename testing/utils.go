@@ -44,3 +44,15 @@ func NewTestSessionToken(r *redis.Client) string {
 	_, _ = r.Set(module.SessionTokenPrefix(token), "testonly@fakemail.co", time.Hour*1).Result()
 	return token
 }
+
+func NewTestEntities(router *gin.Engine, apis ...utils.ServiceAPI) (*httptest.Server, *db.DB, *redis.Client, map[string]string) {
+	server := NewTestRouter(router, apis...)
+	d, r := NewTestDB()
+	tk := NewTestSessionToken(r)
+
+	hdr := map[string]string{
+		utils.HEADER_SESSION_TOKEN: tk,
+	}
+
+	return server, d, r, hdr
+}

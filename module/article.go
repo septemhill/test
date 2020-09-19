@@ -140,7 +140,6 @@ func GetPost(ctx context.Context, d *db.DB, postID int) (*Article, error) {
 func NewComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
 	var id int
 	expr := `INSERT INTO comments VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING id`
-
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		curr := time.Now().Truncate(time.Millisecond).UTC()
 		if err := tx.GetContext(ctx, &id, expr, comment.ArticleID, comment.Author, comment.Content, curr, curr); err != nil {

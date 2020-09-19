@@ -119,8 +119,8 @@ func TestGetPosts(t *testing.T) {
 	}
 
 	defer func() {
-		test.DeleteAccounts(ctx, d, users...)
 		test.DeletePosts(ctx, d, posts...)
+		test.DeleteAccounts(ctx, d, users...)
 	}()
 
 	header := map[string]string{
@@ -200,9 +200,9 @@ func TestGetPost(t *testing.T) {
 	}
 
 	defer func() {
-		test.DeleteAccounts(ctx, d, users...)
 		test.DeleteComments(ctx, d, comments...)
 		test.DeletePosts(ctx, d, posts...)
+		test.DeleteAccounts(ctx, d, users...)
 	}()
 
 	header := map[string]string{
@@ -444,9 +444,9 @@ func TestDeletePost(t *testing.T) {
 	}
 
 	defer func() {
-		test.DeleteAccounts(ctx, d, users...)
-		test.DeletePosts(ctx, d, posts...)
 		test.DeleteComments(ctx, d, comments...)
+		test.DeletePosts(ctx, d, posts...)
+		test.DeleteAccounts(ctx, d, users...)
 	}()
 
 	header := map[string]string{
@@ -504,3 +504,126 @@ func TestDeletePost(t *testing.T) {
 		asserts.Equal(test.GetStatusCode, grsp.StatusCode)
 	}
 }
+
+func TestNewComment(t *testing.T) {
+	ctx := context.Background()
+	ts, d, r, hdr := test.NewTestEntities(gin.Default(), ArticleService)
+	defer func() {
+		d.Close()
+		r.Close()
+	}()
+
+	users := []*module.Account{
+		test.NewAccount(ctx, d, false),
+		test.NewAccount(ctx, d, false),
+	}
+
+	posts := []*module.Article{
+		test.NewPost(ctx, d, users[0].Username),
+	}
+
+	comments := []*module.Comment{
+		{
+			Author:  users[1].Username,
+			Content: "This is 1st comment for post[0]",
+		}, {
+			Author:  users[1].Username,
+			Content: "This is 2nd comment for post[0]",
+		}, {
+			Author:  users[1].Username,
+			Content: "This is 1st comment for non-existed",
+		}, {
+			Author:  users[1].Username,
+			Content: "This is 2nd comment for non-existed",
+		},
+	}
+
+	defer func() {
+		test.DeleteComments(ctx, d, comments...)
+		test.DeletePosts(ctx, d, posts...)
+		test.DeleteAccounts(ctx, d, users...)
+	}()
+
+	tests := []struct {
+		Description        string
+		Article            module.Article
+		Comment            []*module.Comment
+		PostStatusCode     int
+		GetStatusCode      int
+		ExpectedCommentLen int
+		Expected           []*module.Comment
+	}{
+		{
+			Description:        "New comments to exist post",
+			Article:            *posts[0],
+			Comment:            comments[:2],
+			PostStatusCode:     http.StatusOK,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 2,
+			Expected:           comments[:2],
+		}, {
+			Description: "New comments to non-existed post",
+			Article: module.Article{
+				ID: 56482,
+			},
+			Comment:            comments[2:4],
+			PostStatusCode:     http.StatusNotFound,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 0,
+			Expected:           nil,
+		},
+	}
+
+	asserts := assert.New(t)
+
+	for _, test := range tests {
+		t.Run(test.Description, func(t *testing.T) {
+			for _, comment := range test.Comment {
+				b, err := json.Marshal(comment)
+				asserts.NoError(err)
+
+				nreq, err := NewRequestWithTestHeader("POST", ts.URL+"/article/"+fmt.Sprint(test.Article.ID)+"/comment", bytes.NewBuffer(b), hdr)
+				asserts.NoError(err)
+
+				nrsp, err := http.DefaultClient.Do(nreq)
+				asserts.NoError(err)
+				defer nrsp.Body.Close()
+
+				nbody, err := ioutil.ReadAll(nrsp.Body)
+				asserts.NoError(err)
+
+				asserts.Equal(test.PostStatusCode, nrsp.StatusCode, string(nbody))
+			}
+
+			greq, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID)+"/comments", nil, hdr)
+			asserts.NoError(err)
+
+			grsp, err := http.DefaultClient.Do(greq)
+			asserts.NoError(err)
+			defer grsp.Body.Close()
+
+			asserts.Equal(test.GetStatusCode, grsp.StatusCode)
+
+			body, err := ioutil.ReadAll(grsp.Body)
+			asserts.NoError(err)
+
+			comments := []*module.Comment{}
+			err = json.Unmarshal(body, &comments)
+			asserts.NoError(err)
+
+			asserts.Equal(test.ExpectedCommentLen, len(comments))
+
+			for i := 0; i < len(test.Expected); i++ {
+				asserts.Equal(test.Expected[i].Author, comments[i].Author)
+				asserts.Equal(test.Expected[i].Content, comments[i].Content)
+			}
+
+		})
+	}
+}
+
+func TestGetComments(t *testing.T) {}
+
+func TestDeleteComment(t *testing.T) {}
+
+func TestUpdateComment(t *testing.T) {}

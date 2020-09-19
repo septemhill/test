@@ -181,8 +181,15 @@ func (h *articleHandler) GetPost(c *gin.Context) {
 }
 
 func (h *articleHandler) NewComment(c *gin.Context) {
-	comment := new(module.Comment)
-	if err := c.BindUri(comment); err != nil {
+	id, comment := new(module.Comment), new(module.Comment)
+	if err := c.BindUri(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	if err := c.BindJSON(comment); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),
 		})
@@ -190,6 +197,7 @@ func (h *articleHandler) NewComment(c *gin.Context) {
 	}
 
 	d := middleware.PostgresDB(c)
+	comment.ArticleID = id.ArticleID
 
 	requestHandler(c, func(ctx context.Context) (interface{}, error) {
 		return module.NewComment(c, d, comment)
@@ -201,7 +209,7 @@ func (h *articleHandler) NewComment(c *gin.Context) {
 		}
 
 		if errors.As(err, &pgerr) {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusNotFound, gin.H{
 				"errMessage": pgerr.Code + ":" + pgerr.Error(),
 			})
 			return
@@ -328,7 +336,7 @@ func ArticleService(r gin.IRouter) gin.IRouter {
 	article.DELETE("/:id", handler.DeletePost)
 
 	article.POST("/:id/comment", handler.NewComment)
-	article.GET("/:id/comment", handler.GetComments)
+	article.GET("/:id/comments", handler.GetComments)
 	article.DELETE("/:id/comment/:commentid", handler.DeleteComment)
 	article.PUT("/:id/comment/:commentid", handler.UpdateComment)
 
