@@ -661,236 +661,285 @@ func TestNewAndGetComments(t *testing.T) {
 	}
 }
 
-// func TestDeleteComment(t *testing.T) {
-// 	ctx := context.Background()
-// 	ts, d, r, hdr := test.NewTestEntities(gin.Default(), ArticleService)
-// 	defer func() {
-// 		d.Close()
-// 		r.Close()
-// 	}()
+func TestDeleteComment(t *testing.T) {
+	ctx := context.Background()
+	ts, d, r, hdr := test.NewTestEntities(gin.Default(), ArticleService)
+	defer func() {
+		d.Close()
+		r.Close()
+	}()
 
-// 	users := []*module.Account{
-// 		test.NewAccount(ctx, d, false),
-// 		test.NewAccount(ctx, d, false),
-// 		test.NewAccount(ctx, d, false),
-// 	}
+	users := []test.LoggedAccount{
+		test.NewAccountWithLogin(ctx, d, r),
+		test.NewAccountWithLogin(ctx, d, r),
+		test.NewAccountWithLogin(ctx, d, r),
+	}
 
-// 	posts := []*module.Article{
-// 		test.NewPost(ctx, d, users[0].Username),
-// 	}
+	posts := []*module.Article{
+		test.NewPost(ctx, d, users[2].Username),
+	}
 
-// 	comments := []*module.Comment{
-// 		test.NewComment(ctx, d, users[0].Username, posts[0].ID),
-// 		test.NewComment(ctx, d, users[2].Username, posts[0].ID),
-// 		test.NewComment(ctx, d, users[1].Username, posts[0].ID),
-// 		test.NewComment(ctx, d, users[2].Username, posts[0].ID),
-// 	}
+	comments := []*module.Comment{
+		test.NewComment(ctx, d, users[0].Username, posts[0].ID),
+		test.NewComment(ctx, d, users[2].Username, posts[0].ID),
+		test.NewComment(ctx, d, users[1].Username, posts[0].ID),
+		test.NewComment(ctx, d, users[2].Username, posts[0].ID),
+	}
 
-// 	defer func() {
-// 		test.DeleteComments(ctx, d, comments...)
-// 		test.DeletePosts(ctx, d, posts...)
-// 		test.DeleteAccounts(ctx, d, users...)
-// 	}()
+	defer func() {
+		test.DeleteComments(ctx, d, comments...)
+		test.DeletePosts(ctx, d, posts...)
+		test.DeleteLoggedAccounts(ctx, d, users...)
+	}()
 
-// 	tests := []struct {
-// 		Description        string
-// 		Article            module.Article
-// 		Comment            module.Comment
-// 		DeleteStatusCode   int
-// 		GetStatusCode      int
-// 		ExpectedCommentLen int
-// 		Expected           []module.Comment
-// 	}{
-// 		{
-// 			Description:        "Delete comment from exist post and exist comment",
-// 			Article:            *posts[0],
-// 			Comment:            *comments[0],
-// 			DeleteStatusCode:   http.StatusOK,
-// 			GetStatusCode:      http.StatusOK,
-// 			ExpectedCommentLen: 3,
-// 			Expected:           []module.Comment{*comments[1], *comments[2], *comments[3]},
-// 		}, {
-// 			Description: "Delete comment from exist post and non-exist comment",
-// 			Article:     *posts[0],
-// 			Comment: module.Comment{
-// 				ID: 292823,
-// 			},
-// 			DeleteStatusCode:   http.StatusNotFound,
-// 			GetStatusCode:      http.StatusOK,
-// 			ExpectedCommentLen: 3,
-// 			Expected:           []module.Comment{*comments[1], *comments[2], *comments[3]},
-// 		}, {
-// 			Description: "Delete comment from non-exist post",
-// 			Article: module.Article{
-// 				ID: 23914,
-// 			},
-// 			Comment: module.Comment{
-// 				ID: 292823,
-// 			},
-// 			DeleteStatusCode:   http.StatusNotFound,
-// 			GetStatusCode:      http.StatusOK,
-// 			ExpectedCommentLen: 0,
-// 			Expected:           []module.Comment{},
-// 		},
-// 	}
+	tests := []struct {
+		Description        string
+		Token              string
+		Article            module.Article
+		Comment            module.Comment
+		DeleteStatusCode   int
+		GetStatusCode      int
+		ExpectedCommentLen int
+		Expected           []module.Comment
+	}{
+		{
+			Description:        "Delete comment from exist post and exist comment with comment author",
+			Token:              users[0].Token,
+			Article:            *posts[0],
+			Comment:            *comments[0],
+			DeleteStatusCode:   http.StatusOK,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 3,
+			Expected:           []module.Comment{*comments[1], *comments[2], *comments[3]},
+		}, {
+			Description: "Delete comment from exist post and non-exist comment",
+			Token:       users[0].Token,
+			Article:     *posts[0],
+			Comment: module.Comment{
+				ID: 292823,
+			},
+			DeleteStatusCode:   http.StatusNotFound,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 3,
+			Expected:           []module.Comment{*comments[1], *comments[2], *comments[3]},
+		}, {
+			Description: "Delete comment from non-exist post",
+			Token:       users[0].Token,
+			Article: module.Article{
+				ID: 23914,
+			},
+			Comment: module.Comment{
+				ID: 292823,
+			},
+			DeleteStatusCode:   http.StatusNotFound,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 0,
+			Expected:           []module.Comment{},
+		}, {
+			Description:        "Delete comment from exist post and exist comment with post author",
+			Token:              users[2].Token,
+			Article:            *posts[0],
+			Comment:            *comments[1],
+			DeleteStatusCode:   http.StatusOK,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 2,
+			Expected:           []module.Comment{*comments[2], *comments[3]},
+		},
+	}
 
-// 	asserts := assert.New(t)
+	asserts := assert.New(t)
 
-// 	for _, test := range tests {
-// 		t.Run(test.Description, func(t *testing.T) {
-// 			dreq, err := NewRequestWithTestHeader("DELETE",
-// 				ts.URL+"/article/"+fmt.Sprint(test.Article.ID)+"/comment/"+fmt.Sprint(test.Comment.ID), nil, hdr)
-// 			asserts.NoError(err)
+	for _, test := range tests {
+		t.Run(test.Description, func(t *testing.T) {
+			hdr[utils.HEADER_SESSION_TOKEN] = test.Token
+			dreq, err := NewRequestWithTestHeader("DELETE",
+				ts.URL+"/article/"+fmt.Sprint(test.Article.ID)+"/comment/"+fmt.Sprint(test.Comment.ID), nil, hdr)
+			asserts.NoError(err)
 
-// 			drsp, err := http.DefaultClient.Do(dreq)
-// 			asserts.NoError(err)
-// 			defer drsp.Body.Close()
+			drsp, err := http.DefaultClient.Do(dreq)
+			asserts.NoError(err)
+			defer drsp.Body.Close()
 
-// 			dbody, err := ioutil.ReadAll(drsp.Body)
-// 			asserts.NoError(err)
+			dbody, err := ioutil.ReadAll(drsp.Body)
+			asserts.NoError(err)
 
-// 			asserts.Equal(test.DeleteStatusCode, drsp.StatusCode, string(dbody))
+			asserts.Equal(test.DeleteStatusCode, drsp.StatusCode, string(dbody))
 
-// 			greq, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID)+"/comments", nil, hdr)
-// 			asserts.NoError(err)
+			greq, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID)+"/comments", nil, hdr)
+			asserts.NoError(err)
 
-// 			grsp, err := http.DefaultClient.Do(greq)
-// 			asserts.NoError(err)
-// 			defer grsp.Body.Close()
+			grsp, err := http.DefaultClient.Do(greq)
+			asserts.NoError(err)
+			defer grsp.Body.Close()
 
-// 			asserts.Equal(test.GetStatusCode, grsp.StatusCode)
+			asserts.Equal(test.GetStatusCode, grsp.StatusCode)
 
-// 			body, err := ioutil.ReadAll(grsp.Body)
-// 			asserts.NoError(err)
+			body, err := ioutil.ReadAll(grsp.Body)
+			asserts.NoError(err)
 
-// 			comments := []*module.Comment{}
-// 			err = json.Unmarshal(body, &comments)
-// 			asserts.NoError(err)
+			comments := []*module.Comment{}
+			err = json.Unmarshal(body, &comments)
+			asserts.NoError(err)
 
-// 			asserts.Equal(test.ExpectedCommentLen, len(comments))
+			asserts.Equal(test.ExpectedCommentLen, len(comments))
 
-// 			for i := 0; i < len(test.Expected); i++ {
-// 				asserts.Equal(test.Expected[i].Author, comments[i].Author)
-// 				asserts.Equal(test.Expected[i].Content, comments[i].Content)
-// 			}
-// 		})
-// 	}
-// }
+			for i := 0; i < len(test.Expected); i++ {
+				asserts.Equal(test.Expected[i].Author, comments[i].Author)
+				asserts.Equal(test.Expected[i].Content, comments[i].Content)
+			}
+		})
+	}
+}
 
-// func TestUpdateComment(t *testing.T) {
-// 	ctx := context.Background()
-// 	ts, d, r, hdr := test.NewTestEntities(gin.Default(), ArticleService)
-// 	defer func() {
-// 		d.Close()
-// 		r.Close()
-// 	}()
+func TestUpdateComment(t *testing.T) {
+	ctx := context.Background()
+	ts, d, r, hdr := test.NewTestEntities(gin.Default(), ArticleService)
+	defer func() {
+		d.Close()
+		r.Close()
+	}()
 
-// 	users := []*module.Account{
-// 		test.NewAccount(ctx, d, false),
-// 		test.NewAccount(ctx, d, false),
-// 		test.NewAccount(ctx, d, false),
-// 	}
+	users := []test.LoggedAccount{
+		test.NewAccountWithLogin(ctx, d, r),
+		test.NewAccountWithLogin(ctx, d, r),
+		test.NewAccountWithLogin(ctx, d, r),
+	}
 
-// 	posts := []*module.Article{
-// 		test.NewPost(ctx, d, users[0].Username),
-// 	}
+	posts := []*module.Article{
+		test.NewPost(ctx, d, users[2].Username),
+	}
 
-// 	comments := []*module.Comment{
-// 		test.NewComment(ctx, d, users[0].Username, posts[0].ID),
-// 		test.NewComment(ctx, d, users[2].Username, posts[0].ID),
-// 		test.NewComment(ctx, d, users[1].Username, posts[0].ID),
-// 		test.NewComment(ctx, d, users[2].Username, posts[0].ID),
-// 	}
+	comments := []*module.Comment{
+		test.NewComment(ctx, d, users[0].Username, posts[0].ID),
+		test.NewComment(ctx, d, users[2].Username, posts[0].ID),
+		test.NewComment(ctx, d, users[1].Username, posts[0].ID),
+		test.NewComment(ctx, d, users[2].Username, posts[0].ID),
+	}
 
-// 	defer func() {
-// 		test.DeleteComments(ctx, d, comments...)
-// 		test.DeletePosts(ctx, d, posts...)
-// 		test.DeleteAccounts(ctx, d, users...)
-// 	}()
+	defer func() {
+		test.DeleteComments(ctx, d, comments...)
+		test.DeletePosts(ctx, d, posts...)
+		test.DeleteLoggedAccounts(ctx, d, users...)
+	}()
 
-// 	tests := []struct {
-// 		Description        string
-// 		Article            module.Article
-// 		Comment            module.Comment
-// 		DeleteStatusCode   int
-// 		GetStatusCode      int
-// 		ExpectedCommentLen int
-// 		Expected           []module.Comment
-// 	}{
-// 		{
-// 			Description:        "Delete comment from exist post and exist comment",
-// 			Article:            *posts[0],
-// 			Comment:            *comments[0],
-// 			DeleteStatusCode:   http.StatusOK,
-// 			GetStatusCode:      http.StatusOK,
-// 			ExpectedCommentLen: 3,
-// 			Expected:           []module.Comment{*comments[1], *comments[2], *comments[3]},
-// 		},
-// 		{
-// 			Description: "Delete comment from exist post and non-exist comment",
-// 			Article:     *posts[0],
-// 			Comment: module.Comment{
-// 				ID: 292823,
-// 			},
-// 			DeleteStatusCode:   http.StatusNotFound,
-// 			GetStatusCode:      http.StatusOK,
-// 			ExpectedCommentLen: 3,
-// 			Expected:           []module.Comment{*comments[1], *comments[2], *comments[3]},
-// 		},
-// 		{
-// 			Description: "Delete comment from non-exist post",
-// 			Article: module.Article{
-// 				ID: 23914,
-// 			},
-// 			Comment: module.Comment{
-// 				ID: 292823,
-// 			},
-// 			DeleteStatusCode:   http.StatusNotFound,
-// 			GetStatusCode:      http.StatusOK,
-// 			ExpectedCommentLen: 0,
-// 			Expected:           []module.Comment{},
-// 		},
-// 	}
+	newComment := func(id, art_id int, author, content string) *module.Comment {
+		return &module.Comment{
+			ID:        id,
+			ArticleID: art_id,
+			Author:    author,
+			Content:   content,
+		}
+	}
 
-// 	asserts := assert.New(t)
+	tests := []struct {
+		Description        string
+		Token              string
+		Article            module.Article
+		Comment            module.Comment
+		UpdateStatusCode   int
+		GetStatusCode      int
+		ExpectedCommentLen int
+		Expected           []module.Comment
+	}{
+		{
+			Description:        "Update comment from exist post and exist comment with comment author",
+			Token:              users[0].Token,
+			Article:            *posts[0],
+			Comment:            *newComment(comments[0].ID, posts[0].ID, comments[0].Author, "update content"),
+			UpdateStatusCode:   http.StatusOK,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 4,
+			Expected: []module.Comment{*newComment(comments[0].ID, posts[0].ID, comments[0].Author, "update content"),
+				*comments[1], *comments[2], *comments[3]},
+		}, {
+			Description:        "Update comment from exist post and exist comment with other author",
+			Token:              users[2].Token,
+			Article:            *posts[0],
+			Comment:            *newComment(comments[0].ID, posts[0].ID, comments[0].Author, "never happen"),
+			UpdateStatusCode:   http.StatusNotFound, //TODO: should be http.StatusForbidden, need fix UpdateComment
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 4,
+			Expected: []module.Comment{*newComment(comments[0].ID, posts[0].ID, comments[0].Author, "update content"),
+				*comments[1], *comments[2], *comments[3]},
+		}, {
+			Description: "Update comment from exist post and non-exist comment",
+			Article:     *posts[0],
+			Comment: module.Comment{
+				ID: 292823,
+			},
+			UpdateStatusCode:   http.StatusNotFound,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 4,
+			Expected: []module.Comment{*newComment(comments[0].ID, posts[0].ID, comments[0].Author, "update content"),
+				*comments[1], *comments[2], *comments[3]},
+		}, {
+			Description: "Update comment from non-exist post",
+			Article: module.Article{
+				ID: 23914,
+			},
+			Comment: module.Comment{
+				ID: 292823,
+			},
+			UpdateStatusCode:   http.StatusNotFound,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 0,
+			Expected:           []module.Comment{},
+		}, {
+			Description:        "Update comment from exist post and exist comment with post author, it should fail",
+			Token:              users[2].Token,
+			Article:            *posts[0],
+			Comment:            *newComment(comments[0].ID, posts[0].ID, comments[0].Author, "never happen"),
+			UpdateStatusCode:   http.StatusNotFound,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 4,
+			Expected: []module.Comment{*newComment(comments[0].ID, posts[0].ID, comments[0].Author, "update content"),
+				*comments[1], *comments[2], *comments[3]},
+		},
+	}
 
-// 	for _, test := range tests {
-// 		t.Run(test.Description, func(t *testing.T) {
-// 			dreq, err := NewRequestWithTestHeader("DELETE",
-// 				ts.URL+"/article/"+fmt.Sprint(test.Article.ID)+"/comment/"+fmt.Sprint(test.Comment.ID), nil, hdr)
-// 			asserts.NoError(err)
+	asserts := assert.New(t)
 
-// 			drsp, err := http.DefaultClient.Do(dreq)
-// 			asserts.NoError(err)
-// 			defer drsp.Body.Close()
+	for _, test := range tests {
+		t.Run(test.Description, func(t *testing.T) {
+			hdr[utils.HEADER_SESSION_TOKEN] = test.Token
+			b, err := json.Marshal(&test.Comment)
+			asserts.NoError(err)
 
-// 			dbody, err := ioutil.ReadAll(drsp.Body)
-// 			asserts.NoError(err)
+			dreq, err := NewRequestWithTestHeader("PUT",
+				ts.URL+"/article/"+fmt.Sprint(test.Article.ID)+"/comment/"+fmt.Sprint(test.Comment.ID), bytes.NewBuffer(b), hdr)
+			asserts.NoError(err)
 
-// 			asserts.Equal(test.DeleteStatusCode, drsp.StatusCode, string(dbody))
+			drsp, err := http.DefaultClient.Do(dreq)
+			asserts.NoError(err)
+			defer drsp.Body.Close()
 
-// 			greq, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID)+"/comments", nil, hdr)
-// 			asserts.NoError(err)
+			dbody, err := ioutil.ReadAll(drsp.Body)
+			asserts.NoError(err)
 
-// 			grsp, err := http.DefaultClient.Do(greq)
-// 			asserts.NoError(err)
-// 			defer grsp.Body.Close()
+			asserts.Equal(test.UpdateStatusCode, drsp.StatusCode, string(dbody))
 
-// 			asserts.Equal(test.GetStatusCode, grsp.StatusCode)
+			greq, err := NewRequestWithTestHeader("GET", ts.URL+"/article/"+fmt.Sprint(test.Article.ID)+"/comments", nil, hdr)
+			asserts.NoError(err)
 
-// 			body, err := ioutil.ReadAll(grsp.Body)
-// 			asserts.NoError(err)
+			grsp, err := http.DefaultClient.Do(greq)
+			asserts.NoError(err)
+			defer grsp.Body.Close()
 
-// 			comments := []*module.Comment{}
-// 			err = json.Unmarshal(body, &comments)
-// 			asserts.NoError(err)
+			asserts.Equal(test.GetStatusCode, grsp.StatusCode)
 
-// 			asserts.Equal(test.ExpectedCommentLen, len(comments))
+			body, err := ioutil.ReadAll(grsp.Body)
+			asserts.NoError(err)
 
-// 			for i := 0; i < len(test.Expected); i++ {
-// 				asserts.Equal(test.Expected[i].Author, comments[i].Author)
-// 				asserts.Equal(test.Expected[i].Content, comments[i].Content)
-// 			}
-// 		})
-// 	}
-// }
+			comments := []*module.Comment{}
+			err = json.Unmarshal(body, &comments)
+			asserts.NoError(err)
+
+			asserts.Equal(test.ExpectedCommentLen, len(comments))
+
+			for i := 0; i < len(test.Expected); i++ {
+				asserts.Equal(test.Expected[i].Author, comments[i].Author)
+				asserts.Equal(test.Expected[i].Content, comments[i].Content)
+			}
+		})
+	}
+}

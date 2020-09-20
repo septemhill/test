@@ -153,10 +153,9 @@ func NewComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
 
 func UpdateComment(ctx context.Context, d *db.DB, u map[string]string, comment *Comment) (int, error) {
 	var id int
-	expr := `UPDATE comments SET content = $1 WHERE id = $2 AND author = $3`
-
+	expr := `UPDATE comments SET content = $1 WHERE id = $2 AND author = $3 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, comment.ID, u[SESS_HSET_USERNAME]); err != nil {
+		if err := tx.GetContext(ctx, &id, expr, comment.Content, comment.ID, u[SESS_HSET_USERNAME]); err != nil {
 			return err
 		}
 		return nil
