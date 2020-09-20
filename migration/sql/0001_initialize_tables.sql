@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS articles (
 	author VARCHAR(30) NOT NULL,
 	title VARCHAR(100) NOT NULL,
 	content VARCHAR(10000),
-	create_at TIMESTAMPTZ NOT NULL,
-	update_at TIMESTAMPTZ NOT NULL,
+	create_at TIMESTAMP NOT NULL,
+	update_at TIMESTAMP NOT NULL,
 	CONSTRAINT fk_author FOREIGN KEY (author) REFERENCES accounts(username)
 );
 

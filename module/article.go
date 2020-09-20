@@ -43,12 +43,12 @@ func NewPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
 	return id, err
 }
 
-func EditPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
+func EditPost(ctx context.Context, d *db.DB, u map[string]string, art *Article) (int, error) {
 	var id int
-	expr := `UPDATE articles SET title = $1, content = $2, update_at = $3 WHERE id = $4 RETURNING id`
+	expr := `UPDATE articles SET title = $1, content = $2, update_at = $3 WHERE id = $4 AND author = $5 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		curr := time.Now().Truncate(time.Millisecond).UTC()
-		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, curr, art.ID); err != nil {
+		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, curr, art.ID, u[SESS_HSET_USERNAME]); err != nil {
 			return err
 		}
 		return nil
@@ -57,16 +57,16 @@ func EditPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
 	return id, err
 }
 
-func DeletePost(ctx context.Context, d *db.DB, postID int) (int, error) {
+func DeletePost(ctx context.Context, d *db.DB, u map[string]string, postID int) (int, error) {
 	var id int
 	commExpr := `WITH deleted AS (DELETE FROM comments WHERE art_id = $1 RETURNING id) SELECT COUNT(*) FROM deleted`
-	artiExpr := `DELETE FROM articles WHERE id = $1 RETURNING id`
+	artiExpr := `DELETE FROM articles WHERE id = $1 AND author = $2 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, commExpr, postID); err != nil {
 			return err
 		}
 
-		if err := tx.GetContext(ctx, &id, artiExpr, postID); err != nil {
+		if err := tx.GetContext(ctx, &id, artiExpr, postID, u[SESS_HSET_USERNAME]); err != nil {
 			return err
 		}
 		return nil
@@ -151,12 +151,12 @@ func NewComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
 	return id, err
 }
 
-func UpdateComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
+func UpdateComment(ctx context.Context, d *db.DB, u map[string]string, comment *Comment) (int, error) {
 	var id int
-	expr := `UPDATE comments SET content = $1 WHERE id = $2`
+	expr := `UPDATE comments SET content = $1 WHERE id = $2 AND author = $3`
 
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, comment.ID); err != nil {
+		if err := tx.GetContext(ctx, &id, expr, comment.ID, u[SESS_HSET_USERNAME]); err != nil {
 			return err
 		}
 		return nil
@@ -218,12 +218,13 @@ func GetComment(ctx context.Context, d *db.DB, postID, commentID int) (*Comment,
 	return comment, err
 }
 
-func DeleteComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
+func DeleteComment(ctx context.Context, d *db.DB, u map[string]string, comment *Comment) (int, error) {
 	var id int
-	expr := `DELETE FROM comments WHERE id = $1 RETURNING id`
+
+	expr := `DELETE FROM comments WHERE id = $1 AND (author = $2 OR (SELECT author FROM articles WHERE id = $3) = $2) RETURNING id`
 
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, expr, comment.ID); err != nil {
+		if err := tx.GetContext(ctx, &id, expr, comment.ID, u[SESS_HSET_USERNAME], comment.ArticleID); err != nil {
 			return err
 		}
 		return nil

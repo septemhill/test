@@ -2,6 +2,7 @@ package module
 
 import (
 	"context"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/septemhill/test/db"
@@ -14,19 +15,16 @@ type Account struct {
 	Email    string      `db:"email" json:"email"`
 	Password string      `db:"password" json:"password"`
 	Phone    null.String `db:"phone" json:"phone"`
+	CreateAt time.Time   `db:"create_at" json:"createAt"`
+	UpdateAt time.Time   `db:"update_at" json:"updateAt"`
 }
 
-func CreateAccount(ctx context.Context, d *db.DB, acc Account) (int, error) {
+func CreateAccount(ctx context.Context, d *db.DB, acc *Account) (int, error) {
 	var id int
-	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3) RETURNING id`
-	accPriExpr := `INSERT INTO accounts_private VALUES (DEFAULT, $1, $2, 'NORMAL') RETURNING id`
-
+	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3, $4, $5, $6, $7) RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email, acc.Phone); err != nil {
-			return err
-		}
-
-		if err := tx.GetContext(ctx, &id, accPriExpr, acc.Email, acc.Password); err != nil {
+		curr := time.Now().Truncate(time.Millisecond).UTC()
+		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email, acc.Phone, acc.Password, "NORMAL", curr, curr); err != nil {
 			return err
 		}
 
@@ -52,7 +50,7 @@ func GetAccountInfo(ctx context.Context, d *db.DB, acc *Account) (*Account, erro
 	return acc, nil
 }
 
-func UpdateAccountInfo(ctx context.Context, d *db.DB, acc Account) (int, error) {
+func UpdateAccountInfo(ctx context.Context, d *db.DB, acc *Account) (int, error) {
 	var id int
 	expr := `UPDATE accounts SET phone = $1 WHERE username = $2 RETURNING id`
 
@@ -67,17 +65,11 @@ func UpdateAccountInfo(ctx context.Context, d *db.DB, acc Account) (int, error) 
 	return id, err
 }
 
-func DeleteAccount(ctx context.Context, d *db.DB, acc Account) (int, error) {
+func DeleteAccount(ctx context.Context, d *db.DB, acc *Account) (int, error) {
 	var id int
-	accExpr := `DELETE FROM accounts WHERE username = $1 AND email = $2 RETURNING id`
-	accPriExpr := `DELETE FROM accounts_private WHERE email = $1 RETURNING id`
-
+	expr := `DELETE FROM accounts WHERE username = $1 AND email = $2 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.GetContext(ctx, &id, accPriExpr, acc.Email); err != nil {
-			return err
-		}
-
-		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email); err != nil {
+		if err := tx.GetContext(ctx, &id, expr, acc.Username, acc.Email); err != nil {
 			return err
 		}
 
@@ -89,7 +81,7 @@ func DeleteAccount(ctx context.Context, d *db.DB, acc Account) (int, error) {
 
 func ChangePassword(ctx context.Context, d *db.DB, email, newPassword string) (int, error) {
 	var id int
-	expr := `UPDATE accounts_private SET password = $1 WHERE email = $2 RETURNING id`
+	expr := `UPDATE accounts SET password = $1 WHERE email = $2 RETURNING id`
 
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, newPassword, email); err != nil {

@@ -75,7 +75,7 @@ func TestCreateAccount(t *testing.T) {
 
 	defer func() {
 		for _, test := range tests {
-			_, _ = module.DeleteAccount(context.Background(), d, test.Account)
+			_, _ = module.DeleteAccount(context.Background(), d, &test.Account)
 		}
 	}()
 
@@ -331,7 +331,7 @@ func TestChangePassword(t *testing.T) {
 			asserts.NoError(err)
 
 			code := m["code"]
-			chgreq.Header.Add("sessionToken", code)
+			chgreq.Header.Add(utils.HEADER_SESSION_TOKEN, code)
 
 			chgrsp, err := http.DefaultClient.Do(chgreq)
 			asserts.NoError(err)
@@ -343,6 +343,7 @@ func TestChangePassword(t *testing.T) {
 			asserts.Equal(test.PasswordChgStatusCode, chgrsp.StatusCode, string(chgbody))
 
 			// Login with new password
+			test.Account.Password = test.Password.Password
 			lab, err := json.Marshal(&test.Account)
 			asserts.NoError(err)
 

@@ -65,9 +65,10 @@ func (h *articleHandler) EditPost(c *gin.Context) {
 
 	art.ID = id
 	d := middleware.PostgresDB(c)
+	u := middleware.UserInfo(c)
 
 	requestHandler(c, func(ctx context.Context) (interface{}, error) {
-		return module.EditPost(ctx, d, art)
+		return module.EditPost(ctx, d, u, art)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
@@ -97,9 +98,10 @@ func (h *articleHandler) DeletePost(c *gin.Context) {
 	}
 
 	d := middleware.PostgresDB(c)
+	u := middleware.UserInfo(c)
 
 	requestHandler(c, func(ctx context.Context) (interface{}, error) {
-		return module.DeletePost(c, d, id)
+		return module.DeletePost(c, d, u, id)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
@@ -236,9 +238,10 @@ func (h *articleHandler) UpdateComment(c *gin.Context) {
 	comment.ArticleID = ids.ArticleID
 	comment.ID = ids.ID
 	d := middleware.PostgresDB(c)
+	u := middleware.UserInfo(c)
 
 	requestHandler(c, func(ctx context.Context) (interface{}, error) {
-		return module.UpdateComment(c, d, comment)
+		return module.UpdateComment(c, d, u, comment)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
@@ -302,9 +305,10 @@ func (h *articleHandler) DeleteComment(c *gin.Context) {
 	}
 
 	d := middleware.PostgresDB(c)
+	u := middleware.UserInfo(c)
 
 	requestHandler(c, func(ctx context.Context) (interface{}, error) {
-		return module.DeleteComment(c, d, comment)
+		return module.DeleteComment(c, d, u, comment)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {

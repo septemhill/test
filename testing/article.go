@@ -29,7 +29,10 @@ func NewPost(ctx context.Context, d *db.DB, author string) *module.Article {
 
 func DeletePosts(ctx context.Context, d *db.DB, arts ...*module.Article) {
 	for _, art := range arts {
-		_, _ = module.DeletePost(ctx, d, art.ID)
+		u := map[string]string{
+			module.SESS_HSET_USERNAME: art.Author,
+		}
+		_, _ = module.DeletePost(ctx, d, u, art.ID)
 	}
 }
 
@@ -61,6 +64,9 @@ func NewComment(ctx context.Context, d *db.DB, author string, artID int) *module
 
 func DeleteComments(ctx context.Context, d *db.DB, comments ...*module.Comment) {
 	for _, comment := range comments {
-		_, _ = module.DeleteComment(ctx, d, comment)
+		u := map[string]string{
+			module.SESS_HSET_USERNAME: comment.Author,
+		}
+		_, _ = module.DeleteComment(ctx, d, u, comment)
 	}
 }

@@ -15,7 +15,7 @@ func ValidateSessionToken(c *gin.Context) {
 	token := c.GetHeader(utils.HEADER_SESSION_TOKEN)
 	r := RedisDB(c)
 
-	email, err := r.Get(module.SessionTokenPrefix(token)).Result()
+	hset, err := r.HGetAll(module.SessionTokenPrefix(token)).Result()
 	if err != nil {
 		if err == redis.Nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
@@ -30,7 +30,7 @@ func ValidateSessionToken(c *gin.Context) {
 		return
 	}
 
-	c.Set(module.RESOURCE_USER_EMAIL, email)
+	c.Set(module.RESOURCE_USER, hset)
 	c.Next()
 }
 
@@ -50,8 +50,8 @@ func Mailer(c *gin.Context) *utils.Mailer {
 	return c.MustGet(module.RESOURCE_MAILER).(*utils.Mailer)
 }
 
-func UserEmail(c *gin.Context) string {
-	return c.MustGet(module.RESOURCE_USER_EMAIL).(string)
+func UserInfo(c *gin.Context) map[string]string {
+	return c.MustGet(module.RESOURCE_USER).(map[string]string)
 }
 
 func SetLogger(logger *logrus.Logger) gin.HandlerFunc {

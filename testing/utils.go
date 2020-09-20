@@ -2,7 +2,6 @@ package testing
 
 import (
 	"net/http/httptest"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
@@ -41,7 +40,12 @@ func NewTestDB() (*db.DB, *redis.Client) {
 
 func NewTestSessionToken(r *redis.Client) string {
 	token := utils.GenerateRandomString(utils.RANDOM_HEX_ONLY, module.SESSION_TOKEN_LEN)
-	_, _ = r.Set(module.SessionTokenPrefix(token), "testonly@fakemail.co", time.Hour*1).Result()
+
+	h := map[string]interface{}{
+		"username": "testonly",
+		"email":    "testonly@fakemail.co",
+	}
+	_, _ = r.HMSet(module.SessionTokenPrefix(token), h).Result()
 	return token
 }
 

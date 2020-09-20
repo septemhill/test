@@ -27,7 +27,7 @@ func (h *accountHandler) CreateAccount(c *gin.Context) {
 	d := middleware.PostgresDB(c)
 
 	requestHandler(c, func(ctx context.Context) (interface{}, error) {
-		return module.CreateAccount(ctx, d, *acc)
+		return module.CreateAccount(ctx, d, acc)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
@@ -98,7 +98,7 @@ func (h *accountHandler) UpdateAccountInfo(c *gin.Context) {
 	d := middleware.PostgresDB(c)
 
 	requestHandler(c, func(ctx context.Context) (interface{}, error) {
-		return module.UpdateAccountInfo(ctx, d, *acc)
+		return module.UpdateAccountInfo(ctx, d, acc)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
@@ -139,7 +139,7 @@ func (h *accountHandler) DeleteAccount(c *gin.Context) {
 	d := middleware.PostgresDB(c)
 
 	requestHandler(c, func(ctx context.Context) (interface{}, error) {
-		return module.DeleteAccount(ctx, d, *acc)
+		return module.DeleteAccount(ctx, d, acc)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
@@ -168,10 +168,10 @@ func (h *accountHandler) ChangePassword(c *gin.Context) {
 	}
 
 	d := middleware.PostgresDB(c)
-	mail := middleware.UserEmail(c)
+	user := middleware.UserInfo(c)
 
 	requestHandler(c, func(ctx context.Context) (interface{}, error) {
-		return module.ChangePassword(ctx, d, mail, pass.Password)
+		return module.ChangePassword(ctx, d, user[module.SESS_HSET_EMAIL], pass.Password)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
