@@ -3,7 +3,6 @@ package module
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
@@ -20,11 +19,10 @@ type SignupInfo struct {
 }
 
 func Login(ctx context.Context, d *db.DB, r *redis.Client, email, password string) (string, error) {
-	expr := `SELECT COUNT(*) FROM accounts_private WHERE email = $1 AND password = $2`
-
+	var username string
+	expr := `SELECT username FROM accounts WHERE email = $1 AND password = $2`
 	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		cnt := 0
-		if err := tx.GetContext(ctx, &cnt, expr, email, password); err != nil {
+		if err := tx.GetContext(ctx, &username, expr, email, password); err != nil {
 			return err
 		}
 		return nil
@@ -34,8 +32,13 @@ func Login(ctx context.Context, d *db.DB, r *redis.Client, email, password strin
 
 	token := utils.GenerateRandomString(utils.RANDOM_HEX_ONLY, SESSION_TOKEN_LEN)
 
-	if _, err := r.Set(token, email, time.Hour*1).Result(); err != nil {
-		return "", err
+	h := map[string]interface{}{
+		SESS_HSET_USERNAME: username,
+		SESS_HSET_EMAIL:    email,
+	}
+
+	if _, err := r.HMSet(SessionTokenPrefix(token), h).Result(); err != nil {
+		return "", nil
 	}
 
 	return token, nil
@@ -76,10 +79,8 @@ func VerifyUserRegistration(ctx context.Context, d *db.DB, r *redis.Client, code
 	}
 
 	insAccount := `
-		INSERT INTO accounts SELECT nextval('accounts_id_seq'), username, email, phone FROM non_verified_accounts WHERE username = $1
-	`
-	insAccountPrivate := `
-		INSERT INTO accounts_private SELECT nexeval('accounts_private_id_seq'), email, password FROM non_verified_accounts WHERE email = $1
+		INSERT INTO accounts SELECT nextval('accounts_id_seq'), username, email, phone, password, 
+			login_type, create_at, update_at FROM non_verified_accounts WHERE username = $1
 	`
 	delNonVerify := `
 		DELETE FROM non_verified_accounts WHERE username = $1
@@ -88,10 +89,6 @@ func VerifyUserRegistration(ctx context.Context, d *db.DB, r *redis.Client, code
 	// TODO: postgres and redis should be in an atomic operation
 	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, insAccount, email); err != nil {
-			return err
-		}
-
-		if _, err := tx.ExecContext(ctx, insAccountPrivate, email); err != nil {
 			return err
 		}
 
@@ -138,7 +135,7 @@ func ForgetPassword(ctx context.Context, d *db.DB, r *redis.Client, email string
 }
 
 func ResetPassword(ctx context.Context, d *db.DB, r *redis.Client, code, password string) error {
-	expr := `UPDATE accounts_private SET password = $1 WHERE email = $2`
+	expr := `UPDATE accounts SET password = $1 WHERE email = $2`
 
 	email, err := r.Get(code).Result()
 	if err != nil {

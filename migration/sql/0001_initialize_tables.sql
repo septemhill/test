@@ -13,7 +13,16 @@ CREATE TABLE IF NOT EXISTS accounts_private (
 	id BIGSERIAL NOT NULL PRIMARY KEY,
 	email VARCHAR(50) NOT NULL,
 	password VARCHAR(255) NOT NULL,
-	CONSTRAINT fk_email FOREIGN KEY (email) REFERENCES accounts(email)
+	login_type VARCHAR(255) NOT NULL, 
+	CONSTRAINT fk_email FOREIGN KEY (email) REFERENCES accounts(email),
+	CONSTRAINT login_type_check CHECK (login_type in ('NORMAL', 'OAUTH2_GOOGLE'))
+);
+
+CREATE TABLE IF NOT EXISTS perms (
+	username VARCHAR(30) NOT NULL,
+	perm int NOT NULL,
+	PRIMARY KEY(username, perm),
+	CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES accounts(username)
 );
 
 CREATE TABLE IF NOT EXISTS articles (
@@ -21,9 +30,16 @@ CREATE TABLE IF NOT EXISTS articles (
 	author VARCHAR(30) NOT NULL,
 	title VARCHAR(100) NOT NULL,
 	content VARCHAR(10000),
-	create_at TIMESTAMPTZ NOT NULL,
-	update_at TIMESTAMPTZ NOT NULL,
+	create_at TIMESTAMP NOT NULL,
+	update_at TIMESTAMP NOT NULL,
 	CONSTRAINT fk_author FOREIGN KEY (author) REFERENCES accounts(username)
+);
+
+CREATE TABLE IF NOT EXISTS articles_tag (
+	art_id BIGSERIAL NOT NULL,
+	tag_name VARCHAR(50) NOT NULL,
+	PRIMARY KEY (art_id, tag_name),
+	CONSTRAINT fk_art_id FOREIGN KEY (art_id) REFERENCES articles(id)
 );
 
 CREATE TABLE IF NOT EXISTS comments (

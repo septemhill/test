@@ -11,16 +11,17 @@ import (
 
 type Article struct {
 	ID       int       `db:"id" json:"id" uri:"id"`
-	Author   string    `db:"author" json:"author"`
+	Author   string    `db:"author" json:"author" uri:"user"`
 	Title    string    `db:"title" json:"title"`
 	Content  string    `db:"content" json:"content"`
 	CreateAt time.Time `db:"create_at" json:"createAt"`
 	UpdateAt time.Time `db:"update_at" json:"updateAt"`
+	Tags     []string  `json:"tags"`
 	Comments []Comment `json:"comments"`
 }
 
 type Comment struct {
-	ID        int       `db:"id" json:"id"`
+	ID        int       `db:"id" json:"id" uri:"commentid"`
 	ArticleID int       `db:"art_id" json:"art_id" uri:"id"`
 	Author    string    `db:"author" json:"author"`
 	Content   string    `db:"content" json:"content"`
@@ -28,38 +29,54 @@ type Comment struct {
 	UpdateAt  time.Time `db:"update_at" json:"updateAt"`
 }
 
-func NewPost(ctx context.Context, d *db.DB, art *Article) error {
-	expr := `INSERT INTO articles VALUES (DEFAULT, $1, $2, $3, $4, $5)`
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if _, err := tx.ExecContext(ctx, expr, art.Author, art.Title, art.Content, time.Now(), time.Now()); err != nil {
+func NewPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
+	var id int
+	expr := `INSERT INTO articles VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING id`
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		curr := time.Now().Truncate(time.Millisecond).UTC()
+		if err := tx.GetContext(ctx, &id, expr, art.Author, art.Title, art.Content, curr, curr); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }
 
-func EditPost(ctx context.Context, d *db.DB, art *Article) error {
-	expr := `UPDATE articles SET title = $1, content = $2, update_at = $3 WHERE id = $4`
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if _, err := tx.ExecContext(ctx, expr, art.Title, art.Content, time.Now(), art.ID); err != nil {
+func EditPost(ctx context.Context, d *db.DB, u map[string]string, art *Article) (int, error) {
+	var id int
+	expr := `UPDATE articles SET title = $1, content = $2, update_at = $3 WHERE id = $4 AND author = $5 RETURNING id`
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		curr := time.Now().Truncate(time.Millisecond).UTC()
+		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, curr, art.ID, u[SESS_HSET_USERNAME]); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }
 
-func DeletePost(ctx context.Context, d *db.DB, art *Article) error {
-	expr := `DELETE FROM articles WHERE id = $1`
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if _, err := tx.ExecContext(ctx, expr, art.ID); err != nil {
+func DeletePost(ctx context.Context, d *db.DB, u map[string]string, postID int) (int, error) {
+	var id int
+	commExpr := `WITH deleted AS (DELETE FROM comments WHERE art_id = $1 RETURNING id) SELECT COUNT(*) FROM deleted`
+	artiExpr := `DELETE FROM articles WHERE id = $1 AND author = $2 RETURNING id`
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, &id, commExpr, postID); err != nil {
+			return err
+		}
+
+		if err := tx.GetContext(ctx, &id, artiExpr, postID, u[SESS_HSET_USERNAME]); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }
 
-func GetPosts(ctx context.Context, d *db.DB, size, offset int, asc bool) ([]Article, error) {
-	expr := `SELECT * FROM articles ORDER BY create_at %s LIMIT $1 OFFSET $2`
+func GetPosts(ctx context.Context, d *db.DB, user string, size, offset int, asc bool) ([]Article, error) {
+	expr := `SELECT * FROM articles WHERE author = $1 ORDER BY create_at %s LIMIT $2 OFFSET $3`
 	if !asc {
 		expr = fmt.Sprintf(expr, "DESC")
 	} else {
@@ -67,12 +84,24 @@ func GetPosts(ctx context.Context, d *db.DB, size, offset int, asc bool) ([]Arti
 	}
 
 	arts := []Article{}
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if err := tx.SelectContext(ctx, &arts, expr, size, offset); err != nil {
+	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.SelectContext(ctx, &arts, expr, user, size, offset); err != nil {
 			return err
 		}
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	loc, err := time.LoadLocation("UTC")
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(arts); i++ {
+		arts[i].CreateAt = arts[i].CreateAt.In(loc)
+		arts[i].UpdateAt = arts[i].UpdateAt.In(loc)
+	}
 
 	return arts, err
 }
@@ -96,31 +125,43 @@ func GetPost(ctx context.Context, d *db.DB, postID int) (*Article, error) {
 		return nil, err
 	}
 
+	loc, err := time.LoadLocation("UTC")
+	if err != nil {
+		return nil, err
+	}
+
 	art.Comments = comments
+	art.CreateAt = art.CreateAt.In(loc)
+	art.UpdateAt = art.UpdateAt.In(loc)
 
 	return art, nil
 }
 
-func NewComment(ctx context.Context, d *db.DB, postID int, comment *Comment) error {
-	expr := `INSERT INTO comments VALUES (DEFAULT, $1, $2, $3, $4, $5)`
-
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if _, err := tx.ExecContext(ctx, expr, postID, comment.Author, comment.Content, time.Now(), time.Now()); err != nil {
+func NewComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
+	var id int
+	expr := `INSERT INTO comments VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING id`
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		curr := time.Now().Truncate(time.Millisecond).UTC()
+		if err := tx.GetContext(ctx, &id, expr, comment.ArticleID, comment.Author, comment.Content, curr, curr); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }
 
-func UpdateComment(ctx context.Context, d *db.DB, comment *Comment) error {
-	expr := `UPDATE comments SET content = $1 WHERE id = $2`
-
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if _, err := tx.ExecContext(ctx, expr, comment.ID); err != nil {
+func UpdateComment(ctx context.Context, d *db.DB, u map[string]string, comment *Comment) (int, error) {
+	var id int
+	expr := `UPDATE comments SET content = $1 WHERE id = $2 AND author = $3 RETURNING id`
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, &id, expr, comment.Content, comment.ID, u[SESS_HSET_USERNAME]); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }
 
 func GetComments(ctx context.Context, d *db.DB, postID, size, offset int) ([]Comment, error) {
@@ -128,23 +169,65 @@ func GetComments(ctx context.Context, d *db.DB, postID, size, offset int) ([]Com
 
 	comments := []Comment{}
 
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.SelectContext(ctx, &comments, expr, postID, size, offset); err != nil {
 			return err
 		}
 		return nil
-	})
+	}); err != nil {
+		return nil, err
+	}
+
+	loc, err := time.LoadLocation("UTC")
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(comments); i++ {
+		comments[i].CreateAt = comments[i].CreateAt.In(loc)
+		comments[i].UpdateAt = comments[i].UpdateAt.In(loc)
+	}
 
 	return comments, err
 }
 
-func DeleteComment(ctx context.Context, d *db.DB, comment *Comment) error {
-	expr := `DELETE FROM comments WHERE id = $1`
+func GetComment(ctx context.Context, d *db.DB, postID, commentID int) (*Comment, error) {
+	expr := `SELECT * FROM comments WHERE id = $1 AND art_id = $2`
 
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if _, err := tx.ExecContext(ctx, expr, comment.ID); err != nil {
+	comment := new(Comment)
+
+	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, comment, expr, commentID, postID); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	loc, err := time.LoadLocation("UTC")
+	if err != nil {
+		return nil, err
+	}
+
+	comment.CreateAt = comment.CreateAt.In(loc)
+	comment.UpdateAt = comment.UpdateAt.In(loc)
+
+	return comment, err
+}
+
+func DeleteComment(ctx context.Context, d *db.DB, u map[string]string, comment *Comment) (int, error) {
+	var id int
+
+	expr := `DELETE FROM comments WHERE id = $1 AND (author = $2 OR (SELECT author FROM articles WHERE id = $3) = $2) RETURNING id`
+
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, &id, expr, comment.ID, u[SESS_HSET_USERNAME], comment.ArticleID); err != nil {
 			return err
 		}
 		return nil
 	})
+
+	return id, err
 }

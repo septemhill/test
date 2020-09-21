@@ -9,9 +9,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis"
-	"github.com/septemhill/test/db"
-	"github.com/septemhill/test/middleware"
 	"github.com/septemhill/test/utils"
 )
 
@@ -29,29 +26,23 @@ type email struct {
 	Email string `json:"email"`
 }
 
-type reqAction func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error
+type reqAction func(ctx context.Context) (interface{}, error)
 
 type errHandler func(c *gin.Context, err error)
 
-func requestHandler(c *gin.Context, v interface{}, handle reqAction, errHandle errHandler) {
-	if err := c.BindJSON(v); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"errMessage": err.Error(),
-		})
-		return
-	}
-
-	d := middleware.PostgresDB(c)
-	r := middleware.RedisDB(c)
-
-	if err := handle(c, d, r, v); err != nil {
+func requestHandler(c *gin.Context, handle reqAction, errHandle errHandler) {
+	v, err := handle(c)
+	if err != nil {
 		errHandle(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "successful",
-	})
+	if v == nil {
+		c.JSON(http.StatusOK, nil)
+		return
+	}
+
+	sendResponse(c, v)
 }
 
 func eTagCompute(v interface{}) (string, error) {
@@ -80,7 +71,5 @@ func sendResponse(c *gin.Context, v interface{}) {
 	}
 
 	c.Header(utils.HEADER_ETAG, eTag)
-	c.JSON(http.StatusOK, gin.H{
-		"data": v,
-	})
+	c.JSON(http.StatusOK, v)
 }

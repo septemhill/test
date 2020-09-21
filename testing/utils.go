@@ -1,7 +1,6 @@
 package testing
 
 import (
-	"context"
 	"net/http/httptest"
 
 	"github.com/gin-gonic/gin"
@@ -10,12 +9,11 @@ import (
 	"github.com/septemhill/test/middleware"
 	"github.com/septemhill/test/module"
 	"github.com/septemhill/test/utils"
-	"gopkg.in/guregu/null.v4"
 )
 
 func NewTestRouter(r *gin.Engine, apis ...utils.ServiceAPI) *httptest.Server {
 	r.Use(middleware.SetTestPostgresDB())
-	r.Use(middleware.SetRedisDB())
+	r.Use(middleware.SetTestRedisDB())
 
 	for _, api := range apis {
 		api(r)
@@ -29,32 +27,36 @@ func NewTestPostgresDB() *db.DB {
 }
 
 func NewTestRedisDB() *redis.Client {
-	return redis.NewClient(&redis.Options{})
+	return redis.NewClient(&redis.Options{
+		Addr:     "localhost:6380",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
 }
 
 func NewTestDB() (*db.DB, *redis.Client) {
 	return NewTestPostgresDB(), NewTestRedisDB()
 }
 
-func NewAccount(ctx context.Context, d *db.DB) *module.Account {
-	name := utils.GenerateRandomString(utils.RANDOM_ALL, 7)
-	pass := utils.GenerateRandomString(utils.RANDOM_ALL, 12)
-	phone := utils.GenerateRandomString(utils.RANDOM_DIGIT_ONLY, 10)
+func NewTestSessionToken(r *redis.Client) string {
+	token := utils.GenerateRandomString(utils.RANDOM_HEX_ONLY, module.SESSION_TOKEN_LEN)
 
-	acc := &module.Account{
-		Username: name,
-		Password: pass,
-		Email:    name + "@balabababa.com",
-		Phone:    null.StringFrom(phone),
+	h := map[string]interface{}{
+		"username": "testonly",
+		"email":    "testonly@fakemail.co",
 	}
-
-	_ = module.CreateAccount(ctx, d, *acc)
-
-	return acc
+	_, _ = r.HMSet(module.SessionTokenPrefix(token), h).Result()
+	return token
 }
 
-func DeleteAccounts(ctx context.Context, d *db.DB, accs ...*module.Account) {
-	for _, acc := range accs {
-		_ = module.DeleteAccount(ctx, d, *acc)
+func NewTestEntities(router *gin.Engine, apis ...utils.ServiceAPI) (*httptest.Server, *db.DB, *redis.Client, map[string]string) {
+	server := NewTestRouter(router, apis...)
+	d, r := NewTestDB()
+	tk := NewTestSessionToken(r)
+
+	hdr := map[string]string{
+		utils.HEADER_SESSION_TOKEN: tk,
 	}
+
+	return server, d, r, hdr
 }

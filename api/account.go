@@ -7,9 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis"
 	"github.com/jackc/pgx"
-	"github.com/septemhill/test/db"
 	"github.com/septemhill/test/middleware"
 	"github.com/septemhill/test/module"
 )
@@ -19,9 +17,17 @@ type accountHandler struct{}
 func (h *accountHandler) CreateAccount(c *gin.Context) {
 	acc := new(module.Account)
 
-	requestHandler(c, acc, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
-		acc := v.(*module.Account)
-		return module.CreateAccount(c, db, *acc)
+	if err := c.BindJSON(acc); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	d := middleware.PostgresDB(c)
+
+	requestHandler(c, func(ctx context.Context) (interface{}, error) {
+		return module.CreateAccount(ctx, d, acc)
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
@@ -30,6 +36,7 @@ func (h *accountHandler) CreateAccount(c *gin.Context) {
 			})
 			return
 		}
+
 		if errors.As(err, &pgerr) {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"errMessage": pgerr.Code + ":" + pgerr.Error(),
@@ -40,54 +47,113 @@ func (h *accountHandler) CreateAccount(c *gin.Context) {
 }
 
 func (h *accountHandler) GetAccountInfo(c *gin.Context) {
-	username := c.Param("user")
-	if username == "" {
+	acc := new(module.Account)
+	if err := c.BindUri(acc); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"errMessage": errors.New("unknown user"),
-		})
-		return
-	}
-
-	var acc module.Account
-	acc.Username = username
-
-	d := middleware.PostgresDB(c)
-	if err := module.GetAccountInfo(c, d, &acc); err != nil {
-		if err == sql.ErrNoRows {
-			c.JSON(http.StatusNotFound, nil)
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{
 			"errMessage": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, acc)
+	d := middleware.PostgresDB(c)
+
+	requestHandler(c, func(ctx context.Context) (interface{}, error) {
+		return module.GetAccountInfo(ctx, d, acc)
+	}, func(c *gin.Context, err error) {
+		var pgerr pgx.PgError
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if errors.As(err, &pgerr) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": pgerr.Code + ":" + pgerr.Error(),
+			})
+			return
+		}
+	})
 }
 
 func (h *accountHandler) UpdateAccountInfo(c *gin.Context) {
-	acc := new(module.Account)
+	id, acc := new(module.Account), new(module.Account)
+	if err := c.BindUri(&id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
 
-	requestHandler(c, acc, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
-		acc := v.(*module.Account)
-		return module.UpdateAccountInfo(c, db, *acc)
+	if err := c.BindJSON(&acc); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	acc.ID = id.ID
+
+	d := middleware.PostgresDB(c)
+
+	requestHandler(c, func(ctx context.Context) (interface{}, error) {
+		return module.UpdateAccountInfo(ctx, d, acc)
 	}, func(c *gin.Context, err error) {
+		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
-			c.JSON(http.StatusNotFound, nil)
+			c.JSON(http.StatusNotFound, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if errors.As(err, &pgerr) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": pgerr.Code + ":" + pgerr.Error(),
+			})
+			return
 		}
 	})
 }
 
 func (h *accountHandler) DeleteAccount(c *gin.Context) {
 	acc := new(module.Account)
+	id, acc := new(module.Account), new(module.Account)
+	if err := c.BindUri(&id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
 
-	requestHandler(c, acc, func(ctx context.Context, db *db.DB, redis *redis.Client, v interface{}) error {
-		acc := v.(*module.Account)
-		return module.DeleteAccount(c, db, *acc)
+	if err := c.BindJSON(&acc); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	acc.ID = id.ID
+
+	d := middleware.PostgresDB(c)
+
+	requestHandler(c, func(ctx context.Context) (interface{}, error) {
+		return module.DeleteAccount(ctx, d, acc)
 	}, func(c *gin.Context, err error) {
+		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
-			c.JSON(http.StatusNotFound, nil)
+			c.JSON(http.StatusNotFound, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if errors.As(err, &pgerr) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": pgerr.Code + ":" + pgerr.Error(),
+			})
+			return
 		}
 	})
 }
@@ -100,6 +166,28 @@ func (h *accountHandler) ChangePassword(c *gin.Context) {
 		})
 		return
 	}
+
+	d := middleware.PostgresDB(c)
+	user := middleware.UserInfo(c)
+
+	requestHandler(c, func(ctx context.Context) (interface{}, error) {
+		return module.ChangePassword(ctx, d, user[module.SESS_HSET_EMAIL], pass.Password)
+	}, func(c *gin.Context, err error) {
+		var pgerr pgx.PgError
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if errors.As(err, &pgerr) {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"errMessage": pgerr.Code + ":" + pgerr.Error(),
+			})
+			return
+		}
+	})
 }
 
 func AccountService(r gin.IRouter) gin.IRouter {

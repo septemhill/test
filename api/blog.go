@@ -15,7 +15,7 @@ func (h *blogHandler) Nothing(c *gin.Context) {
 func BlogService(r gin.IRouter) gin.IRouter {
 	handler := blogHandler{}
 
-	blog := r.Group("/blog")
+	blog := r.Group("/blog/:user")
 
 	// Load `Article` API under `Blog`
 	ArticleService(blog)
