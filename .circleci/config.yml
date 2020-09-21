@@ -1,1 +1,27 @@
-version: 2.1
+# Golang CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-go/ for more details
+version: 2
+jobs:
+  build:
+    machine:
+      image: ubuntu-1604:201903-01
+
+    steps:
+      - checkout
+      - run: docker pull golangci/golangci-lint
+      - run: docker pull postgres:13
+      - run: docker pull septemhill/liquibase:latest
+      - run: docker pull redis
+      - run: docker run -v $PWD:/app -w /app golangci/golangci-lint golangci-lint run
+      - run: docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+      - run: docker run -p 6379:6379 -d redis
+      - run: docker run --net=host -v $PWD/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
+      - run: go version
+      - run: go get -v -t -d ./...
+      - run: go test -v ./...
+workflows:
+  version: 2
+  build-workflow:
+    jobs:
+      - build
