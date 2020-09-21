@@ -10,10 +10,10 @@ jobs:
     #### expecting it in the form of
     ####   /go/src/github.com/circleci/go-tool
     ####   /go/src/bitbucket.org/circleci/go-tool
-    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    # working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
     steps:
       - checkout
-
+      - run: lsb_release -a
       - run: echo $PWD
       - run: docker pull golangci/golangci-lint
       - run: docker pull postgres:13
