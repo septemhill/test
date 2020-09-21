@@ -4,21 +4,7 @@
 version: 2
 jobs:
   build:
-    docker:
-      # specify the version
-      - image: circleci/golang:latest
-      - image: postgres:13
-        environment:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-      - image: golangci/golangci-lint:latest
-      - image: septemhill/liquibase:latest
-      - image: redis:latest
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
+    machine: true
 
     #### TEMPLATE_NOTE: go expects specific checkout path representing url
     #### expecting it in the form of
@@ -28,21 +14,13 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: Running golangci-lint check
-          command: docker run -v /home/runner/work/test/test:/app -w /app golangci/golangci-lint golangci-lint run
-
-      - run:
-          name: Running postgres docker
-          command: docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
-
-      - run:
-          name: Running redis docker
-          command: docker run -p 6379:6379 redis
-
-      - run:
-          name: Postgres database migration
-          command: docker run --net=host -v /home/runner/work/test/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
+      - run: echo $PWD
+      - run: docker pull golangci/golangci-lint
+      - run: docker pull postgres:13
+      - run: docker pull septemhill/liquibase:latest
+      - run: docker run -v /home/travis/gopath/src/github.com/septemhill/test:/app -w /app golangci/golangci-lint golangci-lint run
+      - run: docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+      - run: docker run --net=host -v /home/travis/gopath/src/github.com/septemhill/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
 
       # specify any bash command here prefixed with `run: `
       - run: go get -v -t -d ./...
