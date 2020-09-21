@@ -375,9 +375,8 @@ func TestEditPost(t *testing.T) {
 				Title:   posts[1].Title,
 				Content: "This article is updated",
 			},
-			Token: users[1].Token,
-			//TODO: Need to be http.StatusForbidden, need fix EditPost
-			EditStatusCode: http.StatusNotFound,
+			Token:          users[1].Token,
+			EditStatusCode: http.StatusForbidden,
 			Expected: module.Article{
 				ID:      posts[1].ID,
 				Author:  posts[1].Author,
@@ -500,13 +499,13 @@ func TestDeletePost(t *testing.T) {
 			Description:      "Delete post without comments with wrong user",
 			Article:          *posts[3],
 			Token:            users[0].Token,
-			DeleteStatusCode: http.StatusNotFound,
+			DeleteStatusCode: http.StatusForbidden,
 			GetStatusCode:    http.StatusOK,
 		}, {
 			Description:      "Delete post with comments with wrong user",
 			Article:          *posts[2],
 			Token:            users[0].Token,
-			DeleteStatusCode: http.StatusNotFound,
+			DeleteStatusCode: http.StatusForbidden,
 			GetStatusCode:    http.StatusOK,
 		}, {
 			Description: "Delete non-exist post",
@@ -712,6 +711,15 @@ func TestDeleteComment(t *testing.T) {
 			ExpectedCommentLen: 3,
 			Expected:           []module.Comment{*comments[1], *comments[2], *comments[3]},
 		}, {
+			Description:        "Delete comment from exist post and exist comment with other author",
+			Token:              users[1].Token,
+			Article:            *posts[0],
+			Comment:            *comments[1],
+			DeleteStatusCode:   http.StatusForbidden,
+			GetStatusCode:      http.StatusOK,
+			ExpectedCommentLen: 3,
+			Expected:           []module.Comment{*comments[1], *comments[2], *comments[3]},
+		}, {
 			Description: "Delete comment from exist post and non-exist comment",
 			Token:       users[0].Token,
 			Article:     *posts[0],
@@ -856,7 +864,7 @@ func TestUpdateComment(t *testing.T) {
 			Token:              users[2].Token,
 			Article:            *posts[0],
 			Comment:            *newComment(comments[0].ID, posts[0].ID, comments[0].Author, "never happen"),
-			UpdateStatusCode:   http.StatusNotFound, //TODO: should be http.StatusForbidden, need fix UpdateComment
+			UpdateStatusCode:   http.StatusForbidden,
 			GetStatusCode:      http.StatusOK,
 			ExpectedCommentLen: 4,
 			Expected: []module.Comment{*newComment(comments[0].ID, posts[0].ID, comments[0].Author, "update content"),
@@ -889,7 +897,7 @@ func TestUpdateComment(t *testing.T) {
 			Token:              users[2].Token,
 			Article:            *posts[0],
 			Comment:            *newComment(comments[0].ID, posts[0].ID, comments[0].Author, "never happen"),
-			UpdateStatusCode:   http.StatusNotFound,
+			UpdateStatusCode:   http.StatusForbidden,
 			GetStatusCode:      http.StatusOK,
 			ExpectedCommentLen: 4,
 			Expected: []module.Comment{*newComment(comments[0].ID, posts[0].ID, comments[0].Author, "update content"),

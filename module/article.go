@@ -45,9 +45,19 @@ func NewPost(ctx context.Context, d *db.DB, art *Article) (int, error) {
 
 func EditPost(ctx context.Context, d *db.DB, u map[string]string, art *Article) (int, error) {
 	var id int
+	authorCheck := `SELECT author FROM articles WHERE id = $1`
 	expr := `UPDATE articles SET title = $1, content = $2, update_at = $3 WHERE id = $4 AND author = $5 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		curr := time.Now().Truncate(time.Millisecond).UTC()
+		var author string
+		if err := tx.GetContext(ctx, &author, authorCheck, art.ID); err != nil {
+			return err
+		}
+
+		if author != u[SESS_HSET_USERNAME] {
+			return ErrNoPermssion
+		}
+
 		if err := tx.GetContext(ctx, &id, expr, art.Title, art.Content, curr, art.ID, u[SESS_HSET_USERNAME]); err != nil {
 			return err
 		}
@@ -59,9 +69,19 @@ func EditPost(ctx context.Context, d *db.DB, u map[string]string, art *Article) 
 
 func DeletePost(ctx context.Context, d *db.DB, u map[string]string, postID int) (int, error) {
 	var id int
+	authorCheck := `SELECT author FROM articles WHERE id = $1`
 	commExpr := `WITH deleted AS (DELETE FROM comments WHERE art_id = $1 RETURNING id) SELECT COUNT(*) FROM deleted`
 	artiExpr := `DELETE FROM articles WHERE id = $1 AND author = $2 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		var author string
+		if err := tx.GetContext(ctx, &author, authorCheck, postID); err != nil {
+			return err
+		}
+
+		if author != u[SESS_HSET_USERNAME] {
+			return ErrNoPermssion
+		}
+
 		if err := tx.GetContext(ctx, &id, commExpr, postID); err != nil {
 			return err
 		}
@@ -153,8 +173,18 @@ func NewComment(ctx context.Context, d *db.DB, comment *Comment) (int, error) {
 
 func UpdateComment(ctx context.Context, d *db.DB, u map[string]string, comment *Comment) (int, error) {
 	var id int
+	authorCheck := `SELECT author FROM comments WHERE id = $1`
 	expr := `UPDATE comments SET content = $1 WHERE id = $2 AND author = $3 RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		var author string
+		if err := tx.GetContext(ctx, &author, authorCheck, comment.ID); err != nil {
+			return err
+		}
+
+		if author != u[SESS_HSET_USERNAME] {
+			return ErrNoPermssion
+		}
+
 		if err := tx.GetContext(ctx, &id, expr, comment.Content, comment.ID, u[SESS_HSET_USERNAME]); err != nil {
 			return err
 		}
@@ -220,9 +250,24 @@ func GetComment(ctx context.Context, d *db.DB, postID, commentID int) (*Comment,
 func DeleteComment(ctx context.Context, d *db.DB, u map[string]string, comment *Comment) (int, error) {
 	var id int
 
-	expr := `DELETE FROM comments WHERE id = $1 AND (author = $2 OR (SELECT author FROM articles WHERE id = $3) = $2) RETURNING id`
+	type authors struct {
+		CommentAuthor string `db:"ca"`
+		PostAuthor    string `db:"pa"`
+	}
 
+	authorsCheck := `SELECT comments.author AS ca, articles.author AS pa FROM comments
+		INNER JOIN articles ON comments.art_id = articles.id WHERE comments.id = $1 AND comments.art_id = $2`
+	expr := `DELETE FROM comments WHERE id = $1 AND (author = $2 OR (SELECT author FROM articles WHERE id = $3) = $2) RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		a := authors{}
+		if err := tx.GetContext(ctx, &a, authorsCheck, comment.ID, comment.ArticleID); err != nil {
+			return err
+		}
+
+		if a.CommentAuthor != u[SESS_HSET_USERNAME] && a.PostAuthor != u[SESS_HSET_USERNAME] {
+			return ErrNoPermssion
+		}
+
 		if err := tx.GetContext(ctx, &id, expr, comment.ID, u[SESS_HSET_USERNAME], comment.ArticleID); err != nil {
 			return err
 		}

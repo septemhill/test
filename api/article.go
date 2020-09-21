@@ -78,6 +78,13 @@ func (h *articleHandler) EditPost(c *gin.Context) {
 			return
 		}
 
+		if err == module.ErrNoPermssion {
+			c.JSON(http.StatusForbidden, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
 		if errors.As(err, &pgerr) {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"errMessage": pgerr.Code + ":" + pgerr.Error(),
@@ -106,6 +113,13 @@ func (h *articleHandler) DeletePost(c *gin.Context) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if err == module.ErrNoPermssion {
+			c.JSON(http.StatusForbidden, gin.H{
 				"errMessage": err.Error(),
 			})
 			return
@@ -245,7 +259,16 @@ func (h *articleHandler) UpdateComment(c *gin.Context) {
 	}, func(c *gin.Context, err error) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
-			c.JSON(http.StatusNotFound, err.Error())
+			c.JSON(http.StatusNotFound, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if err == module.ErrNoPermssion {
+			c.JSON(http.StatusForbidden, gin.H{
+				"errMessage": err.Error(),
+			})
 			return
 		}
 
@@ -313,6 +336,13 @@ func (h *articleHandler) DeleteComment(c *gin.Context) {
 		var pgerr pgx.PgError
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{
+				"errMessage": err.Error(),
+			})
+			return
+		}
+
+		if err == module.ErrNoPermssion {
+			c.JSON(http.StatusForbidden, gin.H{
 				"errMessage": err.Error(),
 			})
 			return
