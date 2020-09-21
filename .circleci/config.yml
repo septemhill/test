@@ -10,6 +10,7 @@ jobs:
       - image: postgres:13
       - image: golangci/golangci-lint:latest
       - image: septemhill/liquibase:latest
+      - image: redis:latest
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -25,7 +26,9 @@ jobs:
       - checkout
 
       - run: echo $PWD
-
+      - run: docker run -v /home/runner/work/test/test:/app -w /app golangci/golangci-lint golangci-lint run
+      - run: docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+      - run: docker run -p 6379:6379 redis
       - run: docker run --net=host -v /home/runner/work/test/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
 
       # specify any bash command here prefixed with `run: `
