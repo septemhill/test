@@ -18,9 +18,9 @@ jobs:
       - run: docker pull golangci/golangci-lint
       - run: docker pull postgres:13
       - run: docker pull septemhill/liquibase:latest
-      - run: docker run -v /home/travis/gopath/src/github.com/septemhill/test:/app -w /app golangci/golangci-lint golangci-lint run
+      - run: docker run -v $PWD:/app -w /app golangci/golangci-lint golangci-lint run
       - run: docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
-      - run: docker run --net=host -v /home/travis/gopath/src/github.com/septemhill/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
+      - run: docker run --net=host -v $PWD/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
 
       # specify any bash command here prefixed with `run: `
       - run: go get -v -t -d ./...
