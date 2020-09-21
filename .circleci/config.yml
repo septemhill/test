@@ -6,23 +6,18 @@ jobs:
   build:
     machine:
       image: ubuntu-1604:201903-01
-    #### TEMPLATE_NOTE: go expects specific checkout path representing url
-    #### expecting it in the form of
-    ####   /go/src/github.com/circleci/go-tool
-    ####   /go/src/bitbucket.org/circleci/go-tool
-    # working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+
     steps:
       - checkout
-      - run: lsb_release -a
-      - run: ls -la
       - run: docker pull golangci/golangci-lint
       - run: docker pull postgres:13
       - run: docker pull septemhill/liquibase:latest
+      - run: docker pull redis
       - run: docker run -v $PWD:/app -w /app golangci/golangci-lint golangci-lint run
       - run: docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+      - run: docker run -p 6379:6379 redis
       - run: docker run --net=host -v $PWD/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
-
-      # specify any bash command here prefixed with `run: `
+      - run: go version
       - run: go get -v -t -d ./...
       - run: go test -v ./...
 workflows:
