@@ -8,6 +8,9 @@ jobs:
       # specify the version
       - image: circleci/golang:latest
       - image: postgres:13
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
       - image: golangci/golangci-lint:latest
       - image: septemhill/liquibase:latest
       - image: redis:latest
@@ -25,11 +28,21 @@ jobs:
     steps:
       - checkout
 
-      - run: echo $PWD
-      - run: docker run -v /home/runner/work/test/test:/app -w /app golangci/golangci-lint golangci-lint run
-      - run: docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
-      - run: docker run -p 6379:6379 redis
-      - run: docker run --net=host -v /home/runner/work/test/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
+      - run:
+          name: Running golangci-lint check
+          command: docker run -v /home/runner/work/test/test:/app -w /app golangci/golangci-lint golangci-lint run
+
+      - run:
+          name: Running postgres docker
+          command: docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+
+      - run:
+          name: Running redis docker
+          command: docker run -p 6379:6379 redis
+
+      - run:
+          name: Postgres database migration
+          command: docker run --net=host -v /home/runner/work/test/test/migration:/liquibase/changelog septemhill/liquibase --logLevel=debug --url=jdbc:postgresql://localhost:5432/postgres --changeLogFile=./changelog/dbchangelog.xml --username=postgres --password=postgres update
 
       # specify any bash command here prefixed with `run: `
       - run: go get -v -t -d ./...
