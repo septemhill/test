@@ -46,6 +46,35 @@ func (h *rootHandler) Logout(c *gin.Context) {
 }
 
 func (h *rootHandler) Signup(c *gin.Context) {
+	acc := new(module.Account)
+	if err := c.BindJSON(&acc); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	d := middleware.PostgresDB(c)
+	r := middleware.RedisDB(c)
+	m := middleware.Mailer(c)
+
+	code, err := module.Signup(c, d, r, acc)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"errMessage": err.Error(),
+		})
+		return
+	}
+
+	go func() {
+		err = utils.SendMail(m, utils.MailInfo{
+			From:    "septemhill@gmail.com",
+			To:      "septemhill@gmail.com",
+			Subject: "Reset password email confirm",
+			Body:    code,
+		})
+	}()
+
 	c.JSON(http.StatusOK, nil)
 }
 
@@ -53,7 +82,7 @@ func (h *rootHandler) VerifyUserRegistration(c *gin.Context) {
 	code := c.DefaultQuery("code", "")
 	if code == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "unknown verification code",
+			"errMessage": "unknown verification code",
 		})
 		return
 	}
@@ -82,11 +111,11 @@ func (h *rootHandler) ForgetPassword(c *gin.Context) {
 		return
 	}
 
-	db := middleware.PostgresDB(c)
-	redis := middleware.RedisDB(c)
-	mailer := middleware.Mailer(c)
+	d := middleware.PostgresDB(c)
+	r := middleware.RedisDB(c)
+	m := middleware.Mailer(c)
 
-	code, err := module.ForgetPassword(c, db, redis, mail.Email)
+	code, err := module.ForgetPassword(c, d, r, mail.Email)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"errMessage": err.Error(),
@@ -112,7 +141,7 @@ func (h *rootHandler) ForgetPassword(c *gin.Context) {
 
 	//TODO: add channel to receive result
 	go func() {
-		_ = utils.SendMail(*mailer, utils.MailInfo{
+		_ = utils.SendMail(m, utils.MailInfo{
 			From:    "septemhill@gmail.com",
 			To:      "septemhill@gmail.com",
 			Subject: "Reset password email confirm",

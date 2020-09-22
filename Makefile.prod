@@ -44,6 +44,7 @@ prodenv: proddb
 	@export POSTGRES_USER=postgres
 	@export POSTGRES_PASSWORD=postgres
 	@export POSTGRES_PORT=5432
+	@export POSTGRES_DB=postgres
 
 build:
 	@echo $(call glabel, "[Running build]")

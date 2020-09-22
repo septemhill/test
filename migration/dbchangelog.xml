@@ -2,7 +2,7 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-4.0.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd" >
 	<include relativeToChangelogFile="true" file="sql/0001_initialize_tables.sql" />
 	<include relativeToChangelogFile="true" file="sql/0002_merge_accounts_private_into_accounts.sql" />
-	<include relativeToChangelogFile="true" file="sql/0003_create_non_verified_accounts_table.sql" />
+	<include relativeToChangelogFile="true" file="sql/0003_add_active_column_in_accounts.sql" />
 	<include relativeToChangelogFile="true" file="sql/9992_create_drytable.sql" />
 	<include relativeToChangelogFile="true" file="sql/9993_create_article.sql" />
 	<include relativeToChangelogFile="true" file="sql/9994_add_age_column_in_drytable.sql" />

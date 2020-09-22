@@ -21,10 +21,10 @@ type Account struct {
 
 func CreateAccount(ctx context.Context, d *db.DB, acc *Account) (int, error) {
 	var id int
-	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3, $4, $5, $6, $7) RETURNING id`
+	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		curr := time.Now().Truncate(time.Millisecond).UTC()
-		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email, acc.Phone, acc.Password, "NORMAL", curr, curr); err != nil {
+		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email, acc.Phone, acc.Password, "NORMAL", curr, curr, true); err != nil {
 			return err
 		}
 
@@ -85,6 +85,34 @@ func ChangePassword(ctx context.Context, d *db.DB, email, newPassword string) (i
 
 	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, newPassword, email); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return id, err
+}
+
+func DeactivateAccount(ctx context.Context, d *db.DB, acc *Account) (int, error) {
+	var id int
+	expr := `UPDATE accounts SET active = false WHERE email = $1 AND username = $2`
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, &id, expr); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return id, err
+}
+
+func ActivateAccount(ctx context.Context, d *db.DB, acc *Account) (int, error) {
+	var id int
+	expr := `UPDATE accounts SET active = true WHERE email = $1 AND username = $2`
+	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+		if err := tx.GetContext(ctx, &id, expr); err != nil {
 			return err
 		}
 

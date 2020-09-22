@@ -35,7 +35,7 @@ type Mailer struct {
 	Password string `env:"MAILER_PASSWORD"`
 }
 
-func SendMail(mailer Mailer, info MailInfo) error {
+func SendMail(mailer *Mailer, info MailInfo) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", info.From)
 	m.SetHeader("To", info.To)

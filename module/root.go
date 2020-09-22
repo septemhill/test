@@ -3,6 +3,7 @@ package module
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/go-redis/redis"
 	"github.com/jmoiron/sqlx"
@@ -44,12 +45,12 @@ func Login(ctx context.Context, d *db.DB, r *redis.Client, email, password strin
 	return token, nil
 }
 
-func Signup(ctx context.Context, d *db.DB, r *redis.Client, info SignupInfo) (string, error) {
-	expr := `INSERT INTO non_verified_accounts VALUES(DEFAULT, $1, $2, $3, $4) RETURNING id`
-
+func Signup(ctx context.Context, d *db.DB, r *redis.Client, acc *Account) (string, error) {
+	var id int
+	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		var id int
-		if err := tx.GetContext(ctx, &id, expr, info.Username, info.Password, info.Email, info.Phone); err != nil {
+		curr := time.Now().Truncate(time.Millisecond).UTC()
+		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email, acc.Phone, acc.Password, "NORMAL", curr, curr, false); err != nil {
 			return err
 		}
 		return nil
@@ -60,11 +61,11 @@ func Signup(ctx context.Context, d *db.DB, r *redis.Client, info SignupInfo) (st
 	code := utils.GenerateRandomString(utils.RANDOM_ALL, FORGET_PASSWD_LEN)
 	key := SignupKeyPrefix(code)
 
-	if _, err := r.Set(key, info.Email, SignUpKeyTimeout).Result(); err != nil {
+	if _, err := r.Set(key, acc.Email, SignUpKeyTimeout).Result(); err != nil {
 		return "", err
 	}
 
-	return key, nil
+	return code, nil
 }
 
 func VerifyUserRegistration(ctx context.Context, d *db.DB, r *redis.Client, code string) error {
@@ -78,24 +79,14 @@ func VerifyUserRegistration(ctx context.Context, d *db.DB, r *redis.Client, code
 		return errors.New("link already expired")
 	}
 
-	insAccount := `
-		INSERT INTO accounts SELECT nextval('accounts_id_seq'), username, email, phone, password, 
-			login_type, create_at, update_at FROM non_verified_accounts WHERE username = $1
-	`
-	delNonVerify := `
-		DELETE FROM non_verified_accounts WHERE username = $1
-	`
+	var id string
+	activateAccount := `UPDATE accounts SET active = true WHERE email = $1 RETURNING id`
 
 	// TODO: postgres and redis should be in an atomic operation
 	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
-		if _, err := tx.ExecContext(ctx, insAccount, email); err != nil {
+		if err := tx.GetContext(ctx, &id, activateAccount, email); err != nil {
 			return err
 		}
-
-		if _, err := tx.ExecContext(ctx, delNonVerify, email); err != nil {
-			return err
-		}
-
 		return nil
 	}); err != nil {
 		return err
