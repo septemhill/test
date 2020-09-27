@@ -23,7 +23,7 @@ const (
 )
 
 type Role struct {
-	//Name  string
+	// Name  string
 	Perms []PermissionType
 }
 
