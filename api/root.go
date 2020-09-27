@@ -41,8 +41,8 @@ func (h *rootHandler) Login(c *gin.Context) {
 
 func (h *rootHandler) Logout(c *gin.Context) {
 	token := c.GetHeader(utils.HEADER_SESSION_TOKEN)
-	rdb := middleware.RedisDB(c)
-	rdb.Del(token)
+	r := middleware.RedisDB(c)
+	r.Del(token)
 }
 
 func (h *rootHandler) Signup(c *gin.Context) {
@@ -66,6 +66,7 @@ func (h *rootHandler) Signup(c *gin.Context) {
 		return
 	}
 
+	//TODO: add channel to receive result
 	go func() {
 		err = utils.SendMail(m, utils.MailInfo{
 			From:    "septemhill@gmail.com",

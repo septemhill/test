@@ -22,7 +22,7 @@ type SignupInfo struct {
 func Login(ctx context.Context, d *db.DB, r *redis.Client, email, password string) (string, error) {
 	var username string
 	expr := `SELECT username FROM accounts WHERE email = $1 AND password = $2`
-	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	if err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &username, expr, email, password); err != nil {
 			return err
 		}
@@ -48,7 +48,7 @@ func Login(ctx context.Context, d *db.DB, r *redis.Client, email, password strin
 func Signup(ctx context.Context, d *db.DB, r *redis.Client, acc *Account) (string, error) {
 	var id int
 	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
-	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	if err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		curr := time.Now().Truncate(time.Millisecond).UTC()
 		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email, acc.Phone, acc.Password, "NORMAL", curr, curr, false); err != nil {
 			return err
@@ -83,7 +83,7 @@ func VerifyUserRegistration(ctx context.Context, d *db.DB, r *redis.Client, code
 	activateAccount := `UPDATE accounts SET active = true WHERE email = $1 RETURNING id`
 
 	// TODO: postgres and redis should be in an atomic operation
-	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	if err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, activateAccount, email); err != nil {
 			return err
 		}
@@ -105,7 +105,7 @@ func ForgetPassword(ctx context.Context, d *db.DB, r *redis.Client, email string
 	acc := Account{}
 
 	// 1. Check email exist
-	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	if err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &acc, expr, email); err != nil {
 			return err
 		}
@@ -137,7 +137,7 @@ func ResetPassword(ctx context.Context, d *db.DB, r *redis.Client, code, passwor
 		return errors.New("link already expired")
 	}
 
-	return txAction(ctx, d, func(tx *sqlx.Tx) error {
+	return readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		if _, err := tx.ExecContext(ctx, expr, password, email); err != nil {
 			return err
 		}

@@ -22,7 +22,7 @@ type Account struct {
 func CreateAccount(ctx context.Context, d *db.DB, acc *Account) (int, error) {
 	var id int
 	accExpr := `INSERT INTO accounts VALUES(DEFAULT, $1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		curr := time.Now().Truncate(time.Millisecond).UTC()
 		if err := tx.GetContext(ctx, &id, accExpr, acc.Username, acc.Email, acc.Phone, acc.Password, "NORMAL", curr, curr, true); err != nil {
 			return err
@@ -37,7 +37,7 @@ func CreateAccount(ctx context.Context, d *db.DB, acc *Account) (int, error) {
 func GetAccountInfo(ctx context.Context, d *db.DB, acc *Account) (*Account, error) {
 	expr := `SELECT email, phone FROM accounts WHERE username = $1`
 
-	if err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	if err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, acc, expr, acc.Username); err != nil {
 			return err
 		}
@@ -54,7 +54,7 @@ func UpdateAccountInfo(ctx context.Context, d *db.DB, acc *Account) (int, error)
 	var id int
 	expr := `UPDATE accounts SET phone = $1 WHERE username = $2 RETURNING id`
 
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, acc.Phone, acc.Username); err != nil {
 			return err
 		}
@@ -68,7 +68,7 @@ func UpdateAccountInfo(ctx context.Context, d *db.DB, acc *Account) (int, error)
 func DeleteAccount(ctx context.Context, d *db.DB, acc *Account) (int, error) {
 	var id int
 	expr := `DELETE FROM accounts WHERE username = $1 AND email = $2 RETURNING id`
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, acc.Username, acc.Email); err != nil {
 			return err
 		}
@@ -83,7 +83,7 @@ func ChangePassword(ctx context.Context, d *db.DB, email, newPassword string) (i
 	var id int
 	expr := `UPDATE accounts SET password = $1 WHERE email = $2 RETURNING id`
 
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr, newPassword, email); err != nil {
 			return err
 		}
@@ -97,7 +97,7 @@ func ChangePassword(ctx context.Context, d *db.DB, email, newPassword string) (i
 func DeactivateAccount(ctx context.Context, d *db.DB, acc *Account) (int, error) {
 	var id int
 	expr := `UPDATE accounts SET active = false WHERE email = $1 AND username = $2`
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr); err != nil {
 			return err
 		}
@@ -111,7 +111,7 @@ func DeactivateAccount(ctx context.Context, d *db.DB, acc *Account) (int, error)
 func ActivateAccount(ctx context.Context, d *db.DB, acc *Account) (int, error) {
 	var id int
 	expr := `UPDATE accounts SET active = true WHERE email = $1 AND username = $2`
-	err := txAction(ctx, d, func(tx *sqlx.Tx) error {
+	err := readCommittedTxAction(ctx, d, func(tx *sqlx.Tx) error {
 		if err := tx.GetContext(ctx, &id, expr); err != nil {
 			return err
 		}
