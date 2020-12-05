@@ -4,14 +4,13 @@ import (
 	"context"
 
 	"github.com/septemhill/test/account"
-	"github.com/septemhill/test/account/repository"
 )
 
 type accountUseCase struct {
-	repo repository.AccountRepository
+	repo account.AccountRepository
 }
 
-func NewAccountUseCase(repo repository.AccountRepository) *accountUseCase {
+func NewAccountUseCase(repo account.AccountRepository) *accountUseCase {
 	return &accountUseCase{
 		repo: repo,
 	}
