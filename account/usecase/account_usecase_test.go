@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/septemhill/re/account"
+	"github.com/septemhill/test/account"
 )
 
 func TestCreate(t *testing.T) {

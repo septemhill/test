@@ -38,5 +38,5 @@ type AccountRepository interface {
 	GetInfo(context.Context, int) (*Account, error)
 	UpdateInfo(context.Context, *Account) (int, error)
 	Delete(context.Context, int) (int, error)
-	ChangePassword(context.Context, int) (int, error)
+	ChangePassword(context.Context, int, string) (int, error)
 }

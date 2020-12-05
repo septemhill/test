@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/septemhill/re/account"
+	"github.com/septemhill/test/account"
 )
 
 type accountService struct {

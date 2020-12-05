@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 
-	"github.com/septemhill/re/account"
-	"github.com/septemhill/re/account/repository"
+	"github.com/septemhill/test/account"
+	"github.com/septemhill/test/account/repository"
 )
 
 type accountUseCase struct {

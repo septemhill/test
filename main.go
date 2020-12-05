@@ -5,7 +5,7 @@ import (
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 
-	"github.com/septemhill/re/account/repository/postgresql"
+	"github.com/septemhill/test/account/repository/postgresql"
 )
 
 func main() {

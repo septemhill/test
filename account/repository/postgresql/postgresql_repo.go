@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/septemhill/re/account"
+	"github.com/septemhill/test/account"
 )
 
 type accountRepository struct {
