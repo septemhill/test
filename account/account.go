@@ -17,6 +17,14 @@ type Account struct {
 	UpdateAt time.Time   `db:"update_at" json:"updateAt"`
 }
 
+type AccountRepository interface {
+	Create(context.Context, *Account) (int, error)
+	GetInfo(context.Context, int) (*Account, error)
+	UpdateInfo(context.Context, *Account) (int, error)
+	Delete(context.Context, int) (int, error)
+	ChangePassword(context.Context, int, string) (int, error)
+}
+
 type AccountUseCase interface {
 	Create(context.Context, *Account) error
 	GetInfo(context.Context, int) (*Account, error)
@@ -31,12 +39,4 @@ type AccountService interface {
 	UpdateInfo(context.Context, *Account) error
 	Delete(context.Context, int) error
 	ChangePassword(context.Context, int, string) error
-}
-
-type AccountRepository interface {
-	Create(context.Context, *Account) (int, error)
-	GetInfo(context.Context, int) (*Account, error)
-	UpdateInfo(context.Context, *Account) (int, error)
-	Delete(context.Context, int) (int, error)
-	ChangePassword(context.Context, int, string) (int, error)
 }
