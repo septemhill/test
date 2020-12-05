@@ -11,194 +11,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockAccountUseCase is a mock of AccountUseCase interface.
-type MockAccountUseCase struct {
-	ctrl     *gomock.Controller
-	recorder *MockAccountUseCaseMockRecorder
-}
-
-// MockAccountUseCaseMockRecorder is the mock recorder for MockAccountUseCase.
-type MockAccountUseCaseMockRecorder struct {
-	mock *MockAccountUseCase
-}
-
-// NewMockAccountUseCase creates a new mock instance.
-func NewMockAccountUseCase(ctrl *gomock.Controller) *MockAccountUseCase {
-	mock := &MockAccountUseCase{ctrl: ctrl}
-	mock.recorder = &MockAccountUseCaseMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockAccountUseCase) EXPECT() *MockAccountUseCaseMockRecorder {
-	return m.recorder
-}
-
-// Create mocks base method.
-func (m *MockAccountUseCase) Create(arg0 context.Context, arg1 *Account) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Create indicates an expected call of Create.
-func (mr *MockAccountUseCaseMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockAccountUseCase)(nil).Create), arg0, arg1)
-}
-
-// GetInfo mocks base method.
-func (m *MockAccountUseCase) GetInfo(arg0 context.Context, arg1 int) (*Account, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetInfo", arg0, arg1)
-	ret0, _ := ret[0].(*Account)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetInfo indicates an expected call of GetInfo.
-func (mr *MockAccountUseCaseMockRecorder) GetInfo(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInfo", reflect.TypeOf((*MockAccountUseCase)(nil).GetInfo), arg0, arg1)
-}
-
-// UpdateInfo mocks base method.
-func (m *MockAccountUseCase) UpdateInfo(arg0 context.Context, arg1 *Account) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateInfo", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateInfo indicates an expected call of UpdateInfo.
-func (mr *MockAccountUseCaseMockRecorder) UpdateInfo(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateInfo", reflect.TypeOf((*MockAccountUseCase)(nil).UpdateInfo), arg0, arg1)
-}
-
-// Delete mocks base method.
-func (m *MockAccountUseCase) Delete(arg0 context.Context, arg1 int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Delete indicates an expected call of Delete.
-func (mr *MockAccountUseCaseMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockAccountUseCase)(nil).Delete), arg0, arg1)
-}
-
-// ChangePassword mocks base method.
-func (m *MockAccountUseCase) ChangePassword(arg0 context.Context, arg1 int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangePassword", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ChangePassword indicates an expected call of ChangePassword.
-func (mr *MockAccountUseCaseMockRecorder) ChangePassword(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockAccountUseCase)(nil).ChangePassword), arg0, arg1)
-}
-
-// MockAccountService is a mock of AccountService interface.
-type MockAccountService struct {
-	ctrl     *gomock.Controller
-	recorder *MockAccountServiceMockRecorder
-}
-
-// MockAccountServiceMockRecorder is the mock recorder for MockAccountService.
-type MockAccountServiceMockRecorder struct {
-	mock *MockAccountService
-}
-
-// NewMockAccountService creates a new mock instance.
-func NewMockAccountService(ctrl *gomock.Controller) *MockAccountService {
-	mock := &MockAccountService{ctrl: ctrl}
-	mock.recorder = &MockAccountServiceMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockAccountService) EXPECT() *MockAccountServiceMockRecorder {
-	return m.recorder
-}
-
-// Create mocks base method.
-func (m *MockAccountService) Create(arg0 context.Context, arg1 *Account) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Create indicates an expected call of Create.
-func (mr *MockAccountServiceMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockAccountService)(nil).Create), arg0, arg1)
-}
-
-// GetInfo mocks base method.
-func (m *MockAccountService) GetInfo(arg0 context.Context, arg1 int) (*Account, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetInfo", arg0, arg1)
-	ret0, _ := ret[0].(*Account)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetInfo indicates an expected call of GetInfo.
-func (mr *MockAccountServiceMockRecorder) GetInfo(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInfo", reflect.TypeOf((*MockAccountService)(nil).GetInfo), arg0, arg1)
-}
-
-// UpdateInfo mocks base method.
-func (m *MockAccountService) UpdateInfo(arg0 context.Context, arg1 *Account) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateInfo", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateInfo indicates an expected call of UpdateInfo.
-func (mr *MockAccountServiceMockRecorder) UpdateInfo(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateInfo", reflect.TypeOf((*MockAccountService)(nil).UpdateInfo), arg0, arg1)
-}
-
-// Delete mocks base method.
-func (m *MockAccountService) Delete(arg0 context.Context, arg1 int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Delete indicates an expected call of Delete.
-func (mr *MockAccountServiceMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockAccountService)(nil).Delete), arg0, arg1)
-}
-
-// ChangePassword mocks base method.
-func (m *MockAccountService) ChangePassword(arg0 context.Context, arg1 int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangePassword", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ChangePassword indicates an expected call of ChangePassword.
-func (mr *MockAccountServiceMockRecorder) ChangePassword(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockAccountService)(nil).ChangePassword), arg0, arg1)
-}
-
 // MockAccountRepository is a mock of AccountRepository interface.
 type MockAccountRepository struct {
 	ctrl     *gomock.Controller
@@ -283,16 +95,204 @@ func (mr *MockAccountRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gom
 }
 
 // ChangePassword mocks base method.
-func (m *MockAccountRepository) ChangePassword(arg0 context.Context, arg1 int) (int, error) {
+func (m *MockAccountRepository) ChangePassword(arg0 context.Context, arg1 int, arg2 string) (int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChangePassword", arg0, arg1)
+	ret := m.ctrl.Call(m, "ChangePassword", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ChangePassword indicates an expected call of ChangePassword.
-func (mr *MockAccountRepositoryMockRecorder) ChangePassword(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockAccountRepositoryMockRecorder) ChangePassword(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockAccountRepository)(nil).ChangePassword), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockAccountRepository)(nil).ChangePassword), arg0, arg1, arg2)
+}
+
+// MockAccountUseCase is a mock of AccountUseCase interface.
+type MockAccountUseCase struct {
+	ctrl     *gomock.Controller
+	recorder *MockAccountUseCaseMockRecorder
+}
+
+// MockAccountUseCaseMockRecorder is the mock recorder for MockAccountUseCase.
+type MockAccountUseCaseMockRecorder struct {
+	mock *MockAccountUseCase
+}
+
+// NewMockAccountUseCase creates a new mock instance.
+func NewMockAccountUseCase(ctrl *gomock.Controller) *MockAccountUseCase {
+	mock := &MockAccountUseCase{ctrl: ctrl}
+	mock.recorder = &MockAccountUseCaseMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAccountUseCase) EXPECT() *MockAccountUseCaseMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method.
+func (m *MockAccountUseCase) Create(arg0 context.Context, arg1 *Account) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockAccountUseCaseMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockAccountUseCase)(nil).Create), arg0, arg1)
+}
+
+// GetInfo mocks base method.
+func (m *MockAccountUseCase) GetInfo(arg0 context.Context, arg1 int) (*Account, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetInfo", arg0, arg1)
+	ret0, _ := ret[0].(*Account)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetInfo indicates an expected call of GetInfo.
+func (mr *MockAccountUseCaseMockRecorder) GetInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInfo", reflect.TypeOf((*MockAccountUseCase)(nil).GetInfo), arg0, arg1)
+}
+
+// UpdateInfo mocks base method.
+func (m *MockAccountUseCase) UpdateInfo(arg0 context.Context, arg1 *Account) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateInfo", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateInfo indicates an expected call of UpdateInfo.
+func (mr *MockAccountUseCaseMockRecorder) UpdateInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateInfo", reflect.TypeOf((*MockAccountUseCase)(nil).UpdateInfo), arg0, arg1)
+}
+
+// Delete mocks base method.
+func (m *MockAccountUseCase) Delete(arg0 context.Context, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockAccountUseCaseMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockAccountUseCase)(nil).Delete), arg0, arg1)
+}
+
+// ChangePassword mocks base method.
+func (m *MockAccountUseCase) ChangePassword(arg0 context.Context, arg1 int, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ChangePassword", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ChangePassword indicates an expected call of ChangePassword.
+func (mr *MockAccountUseCaseMockRecorder) ChangePassword(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockAccountUseCase)(nil).ChangePassword), arg0, arg1, arg2)
+}
+
+// MockAccountService is a mock of AccountService interface.
+type MockAccountService struct {
+	ctrl     *gomock.Controller
+	recorder *MockAccountServiceMockRecorder
+}
+
+// MockAccountServiceMockRecorder is the mock recorder for MockAccountService.
+type MockAccountServiceMockRecorder struct {
+	mock *MockAccountService
+}
+
+// NewMockAccountService creates a new mock instance.
+func NewMockAccountService(ctrl *gomock.Controller) *MockAccountService {
+	mock := &MockAccountService{ctrl: ctrl}
+	mock.recorder = &MockAccountServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAccountService) EXPECT() *MockAccountServiceMockRecorder {
+	return m.recorder
+}
+
+// Create mocks base method.
+func (m *MockAccountService) Create(arg0 context.Context, arg1 *Account) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Create", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Create indicates an expected call of Create.
+func (mr *MockAccountServiceMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockAccountService)(nil).Create), arg0, arg1)
+}
+
+// GetInfo mocks base method.
+func (m *MockAccountService) GetInfo(arg0 context.Context, arg1 int) (*Account, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetInfo", arg0, arg1)
+	ret0, _ := ret[0].(*Account)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetInfo indicates an expected call of GetInfo.
+func (mr *MockAccountServiceMockRecorder) GetInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetInfo", reflect.TypeOf((*MockAccountService)(nil).GetInfo), arg0, arg1)
+}
+
+// UpdateInfo mocks base method.
+func (m *MockAccountService) UpdateInfo(arg0 context.Context, arg1 *Account) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateInfo", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateInfo indicates an expected call of UpdateInfo.
+func (mr *MockAccountServiceMockRecorder) UpdateInfo(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateInfo", reflect.TypeOf((*MockAccountService)(nil).UpdateInfo), arg0, arg1)
+}
+
+// Delete mocks base method.
+func (m *MockAccountService) Delete(arg0 context.Context, arg1 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockAccountServiceMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockAccountService)(nil).Delete), arg0, arg1)
+}
+
+// ChangePassword mocks base method.
+func (m *MockAccountService) ChangePassword(arg0 context.Context, arg1 int, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ChangePassword", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ChangePassword indicates an expected call of ChangePassword.
+func (mr *MockAccountServiceMockRecorder) ChangePassword(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangePassword", reflect.TypeOf((*MockAccountService)(nil).ChangePassword), arg0, arg1, arg2)
 }
