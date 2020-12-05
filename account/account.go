@@ -22,7 +22,7 @@ type AccountUseCase interface {
 	GetInfo(context.Context, int) (*Account, error)
 	UpdateInfo(context.Context, *Account) error
 	Delete(context.Context, int) error
-	ChangePassword(context.Context, int) error
+	ChangePassword(context.Context, int, string) error
 }
 
 type AccountService interface {
@@ -30,7 +30,7 @@ type AccountService interface {
 	GetInfo(context.Context, int) (*Account, error)
 	UpdateInfo(context.Context, *Account) error
 	Delete(context.Context, int) error
-	ChangePassword(context.Context, int) error
+	ChangePassword(context.Context, int, string) error
 }
 
 type AccountRepository interface {

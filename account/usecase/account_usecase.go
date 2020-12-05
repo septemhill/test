@@ -37,7 +37,7 @@ func (u *accountUseCase) Delete(ctx context.Context) error {
 	return err
 }
 
-func (u *accountUseCase) ChangePassword(ctx context.Context) error {
+func (u *accountUseCase) ChangePassword(ctx context.Context, id int, passwd string) error {
 	_, err := u.repo.ChangePassword(ctx)
 	return err
 }
