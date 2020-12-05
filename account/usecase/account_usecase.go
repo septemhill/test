@@ -22,8 +22,7 @@ func (u *accountUseCase) Create(ctx context.Context, acc *account.Account) error
 }
 
 func (u *accountUseCase) GetInfo(ctx context.Context, id int) (*account.Account, error) {
-	_, err := u.repo.GetInfo(ctx, id)
-	return err
+	return u.repo.GetInfo(ctx, id)
 }
 
 func (u *accountUseCase) UpdateInfo(ctx context.Context, acc *account.Account) error {
